@@ -7,8 +7,11 @@ import { connectDB } from './config/database';
 import authRoutes from './routes/auth';
 import designRoutes from './routes/designs';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from .env file (for local development)
+// In production (Railway), variables are injected directly
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
