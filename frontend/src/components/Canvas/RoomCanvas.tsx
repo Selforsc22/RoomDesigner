@@ -29,6 +29,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
   const canvasRef = useRef<HTMLDivElement>(null);
   const [draggingItem, setDraggingItem] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
 
   const SCALE = BASE_SCALE * zoom;
   const canvasWidth = roomDimensions.width * SCALE;
@@ -130,7 +131,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                 y1={0}
                 x2={i * SCALE}
                 y2={canvasHeight}
-                stroke="#E5E7EB"
+                stroke="#F3F4F6"
                 strokeWidth="1"
               />
             ))}
@@ -142,7 +143,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                 y1={i * SCALE}
                 x2={canvasWidth}
                 y2={i * SCALE}
-                stroke="#E5E7EB"
+                stroke="#F3F4F6"
                 strokeWidth="1"
               />
             ))}
@@ -196,28 +197,37 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           const isRotated = item.rotation === 90 || item.rotation === 270;
           const displayWidth = isRotated ? item.height * SCALE : item.width * SCALE;
           const displayHeight = isRotated ? item.width * SCALE : item.height * SCALE;
+          const isHovered = hoveredItemId === item.id;
 
           return (
             <div
               key={item.id}
-              className={`absolute cursor-move flex items-center justify-center text-xs font-semibold rounded-md transition-all duration-150 ${
+              className={`absolute cursor-move flex flex-col items-center justify-center text-xs font-semibold rounded-md transition-all duration-150 ${
                 selectedItemId === item.id
                   ? 'ring-2 ring-primary shadow-lg scale-105'
                   : 'shadow-md hover:shadow-lg hover:scale-105'
-              }`}
+              } ${draggingItem === item.id ? 'cursor-grabbing' : 'cursor-grab'}`}
               style={{
                 left: item.x * SCALE,
                 top: item.y * SCALE,
                 width: displayWidth,
                 height: displayHeight,
-                backgroundColor: item.color,
-                opacity: draggingItem === item.id ? 0.7 : 1,
+                background: `linear-gradient(135deg, ${item.color} 0%, ${item.color}dd 100%)`,
+                opacity: draggingItem === item.id ? 0.6 : 1,
               }}
               onMouseDown={(e) => handleMouseDown(e, item.id)}
+              onMouseEnter={() => setHoveredItemId(item.id)}
+              onMouseLeave={() => setHoveredItemId(null)}
+              title={`${item.width}' × ${item.height}'`}
             >
-              <span className="text-white text-center px-1 select-none pointer-events-none drop-shadow-sm">
+              <span className="text-white text-center px-1 select-none pointer-events-none drop-shadow-sm overflow-hidden text-ellipsis whitespace-nowrap max-w-full">
                 {item.name}
               </span>
+              {isHovered && (
+                <span className="text-white text-[10px] select-none pointer-events-none drop-shadow-sm mt-0.5">
+                  {item.width}' × {item.height}'
+                </span>
+              )}
             </div>
           );
         })}

@@ -6,7 +6,7 @@ import LeftSidebar from '../Sidebar/LeftSidebar';
 import PropertiesPanel from '../Sidebar/PropertiesPanel';
 import RoomCanvas from '../Canvas/RoomCanvas';
 import WallCanvas from '../Canvas/WallCanvas';
-import { ZoomIn, ZoomOut } from 'lucide-react';
+import { ZoomIn, ZoomOut, Undo, Redo } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -18,6 +18,8 @@ const MainLayout: React.FC = () => {
   const [showGrid, setShowGrid] = useState(true);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const [zoom, setZoom] = useState(1);
+  const [history, setHistory] = useState<Design[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
   // Load designs on mount
   useEffect(() => {
@@ -113,6 +115,43 @@ const MainLayout: React.FC = () => {
   const handleResetZoom = () => {
     setZoom(1);
   };
+
+  const saveToHistory = (design: Design) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(JSON.parse(JSON.stringify(design)));
+    // Keep only last 50 states
+    if (newHistory.length > 50) {
+      newHistory.shift();
+    } else {
+      setHistoryIndex(historyIndex + 1);
+    }
+    setHistory(newHistory);
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0 && currentDesign) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setCurrentDesign(JSON.parse(JSON.stringify(history[newIndex])));
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1 && currentDesign) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setCurrentDesign(JSON.parse(JSON.stringify(history[newIndex])));
+    }
+  };
+
+  // Save to history when design changes (debounced)
+  useEffect(() => {
+    if (!currentDesign) return;
+    const timer = setTimeout(() => {
+      saveToHistory(currentDesign);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentDesign?.furniture, currentDesign?.wallObjects, currentDesign?.doors, currentDesign?.windows, currentDesign?.roomDimensions]);
 
   const addFurniture = (furniture: FurnitureItem) => {
     if (!currentDesign) return;
@@ -298,6 +337,24 @@ const MainLayout: React.FC = () => {
                   <span className="text-sm font-medium text-gray-700">Show Grid</span>
                 </label>
                 <div className="flex items-center gap-1 ml-4 border-l pl-4">
+                  <button
+                    onClick={handleUndo}
+                    disabled={historyIndex <= 0}
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Undo"
+                  >
+                    <Undo className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={handleRedo}
+                    disabled={historyIndex >= history.length - 1}
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Redo"
+                  >
+                    <Redo className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+                <div className="flex items-center gap-1 border-l pl-4">
                   <button
                     onClick={handleZoomOut}
                     className="p-1.5 hover:bg-gray-100 rounded transition-colors"

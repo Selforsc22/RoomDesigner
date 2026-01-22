@@ -47,12 +47,14 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   };
 
   const handleAddFurniture = (furnitureType: FurnitureType) => {
+    // Add random offset to prevent exact overlap
+    const randomOffset = () => Math.random() * 2;
     const furniture: FurnitureItem = {
       id: generateId(),
       type: furnitureType.type,
       name: furnitureType.name,
-      x: 5,
-      y: 5,
+      x: 3 + randomOffset(),
+      y: 3 + randomOffset(),
       width: furnitureType.width,
       height: furnitureType.height,
       rotation: 0,

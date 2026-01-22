@@ -13,14 +13,40 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   onDelete,
 }) => {
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (!selectedItem) {
     return (
-      <div className="w-60 bg-white shadow-lg p-6 flex items-center justify-center">
-        <div className="text-center text-gray-400">
-          <LucideIcons.MousePointer2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p className="text-sm font-medium">Select an item to edit its properties</p>
+      <div className={`${isCollapsed ? 'w-16' : 'w-60'} bg-white shadow-lg transition-all duration-300 flex flex-col`}>
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          {!isCollapsed && <LucideIcons.Settings className="w-5 h-5 text-gray-400" />}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-auto"
+            title={isCollapsed ? 'Expand panel' : 'Collapse panel'}
+          >
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {isCollapsed ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              )}
+            </svg>
+          </button>
         </div>
+        {!isCollapsed && (
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="text-center text-gray-400">
+              <LucideIcons.MousePointer2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm font-medium">Select an item to edit its properties</p>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -53,12 +79,34 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   };
 
   return (
-    <div className="w-60 bg-white shadow-lg overflow-y-auto">
-      <div className="p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <LucideIcons.Settings className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold text-gray-900">Properties</h2>
-        </div>
+    <div className={`${isCollapsed ? 'w-16' : 'w-60'} bg-white shadow-lg overflow-y-auto transition-all duration-300`}>
+      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+        {!isCollapsed && (
+          <div className="flex items-center gap-2">
+            <LucideIcons.Settings className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-bold text-gray-900">Properties</h2>
+          </div>
+        )}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-auto"
+          title={isCollapsed ? 'Expand panel' : 'Collapse panel'}
+        >
+          <svg
+            className="w-5 h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            {isCollapsed ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            )}
+          </svg>
+        </button>
+      </div>
+      {!isCollapsed && <div className="p-6">
 
         <div className="space-y-4">
           {/* Name */}
@@ -212,7 +260,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             Delete
           </button>
         </div>
-      </div>
+      </div>}
     </div>
   );
 };
