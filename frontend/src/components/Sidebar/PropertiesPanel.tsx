@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as LucideIcons from 'lucide-react';
 
 interface PropertiesPanelProps {
   selectedItem: { type: string; item: any } | null;
@@ -15,9 +16,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   if (!selectedItem) {
     return (
-      <div className="w-60 bg-white border-l border-gray-200 p-6">
-        <div className="text-center text-gray-500">
-          <p>Select an item to edit</p>
+      <div className="w-60 bg-white shadow-lg p-6 flex items-center justify-center">
+        <div className="text-center text-gray-400">
+          <LucideIcons.MousePointer2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p className="text-sm font-medium">Select an item to edit its properties</p>
         </div>
       </div>
     );
@@ -51,9 +53,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   };
 
   return (
-    <div className="w-60 bg-white border-l border-gray-200 overflow-y-auto">
+    <div className="w-60 bg-white shadow-lg overflow-y-auto">
       <div className="p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Properties</h2>
+        <div className="flex items-center gap-2 mb-6">
+          <LucideIcons.Settings className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-bold text-gray-900">Properties</h2>
+        </div>
 
         <div className="space-y-4">
           {/* Name */}
@@ -65,7 +70,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               type="text"
               value={item.name || ''}
               onChange={(e) => onUpdate({ name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
             />
           </div>
 
@@ -81,7 +86,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.5"
                 value={item.width || 0}
                 onChange={(e) => onUpdate({ width: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
               />
             </div>
             <div>
@@ -94,7 +99,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.5"
                 value={item.height || 0}
                 onChange={(e) => onUpdate({ height: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
               />
             </div>
           </div>
@@ -110,7 +115,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.1"
                 value={item.x?.toFixed(1) || 0}
                 onChange={(e) => onUpdate({ x: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
               />
             </div>
             <div>
@@ -122,7 +127,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.1"
                 value={item.y?.toFixed(1) || 0}
                 onChange={(e) => onUpdate({ y: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
               />
             </div>
           </div>
@@ -152,8 +157,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               </label>
               <button
                 onClick={handleRotate}
-                className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded font-medium"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
               >
+                <LucideIcons.RotateCw className="w-4 h-4" />
                 Rotate 90° (Current: {item.rotation || 0}°)
               </button>
             </div>
@@ -188,7 +194,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     onChange={handleImageUpload}
                     className="hidden"
                   />
-                  <div className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded font-medium text-center cursor-pointer">
+                  <div className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium text-center cursor-pointer transition-colors">
+                    <LucideIcons.Upload className="w-4 h-4" />
                     {uploadingImage ? 'Uploading...' : 'Upload Image'}
                   </div>
                 </label>
@@ -199,8 +206,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Delete Button */}
           <button
             onClick={onDelete}
-            className="w-full py-2 px-4 bg-red-500 text-white rounded font-medium hover:bg-red-600"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors shadow-sm hover:shadow-md"
           >
+            <LucideIcons.Trash2 className="w-4 h-4" />
             Delete
           </button>
         </div>

@@ -71,6 +71,7 @@ export interface FurnitureType {
   width: number;
   height: number;
   color: string;
+  icon?: string;
 }
 
 export interface WallObjectType {
@@ -78,4 +79,5 @@ export interface WallObjectType {
   name: string;
   width: number;
   height: number;
+  icon?: string;
 }

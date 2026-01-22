@@ -10,9 +10,10 @@ interface RoomCanvasProps {
   selectedItemId: string | null;
   onSelectItem: (id: string | null) => void;
   onUpdateFurniture: (id: string, updates: Partial<FurnitureItem>) => void;
+  zoom?: number;
 }
 
-const SCALE = 20; // pixels per foot
+const BASE_SCALE = 20; // pixels per foot
 
 const RoomCanvas: React.FC<RoomCanvasProps> = ({
   roomDimensions,
@@ -23,11 +24,13 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
   selectedItemId,
   onSelectItem,
   onUpdateFurniture,
+  zoom = 1,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [draggingItem, setDraggingItem] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
+  const SCALE = BASE_SCALE * zoom;
   const canvasWidth = roomDimensions.width * SCALE;
   const canvasHeight = roomDimensions.height * SCALE;
 

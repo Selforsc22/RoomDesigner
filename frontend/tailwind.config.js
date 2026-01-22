@@ -9,6 +9,9 @@ export default {
       colors: {
         primary: '#3B82F6',
       },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
     },
   },
   plugins: [],

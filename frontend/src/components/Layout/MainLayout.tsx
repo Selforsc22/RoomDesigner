@@ -6,6 +6,7 @@ import LeftSidebar from '../Sidebar/LeftSidebar';
 import PropertiesPanel from '../Sidebar/PropertiesPanel';
 import RoomCanvas from '../Canvas/RoomCanvas';
 import WallCanvas from '../Canvas/WallCanvas';
+import { ZoomIn, ZoomOut } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -16,6 +17,7 @@ const MainLayout: React.FC = () => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+  const [zoom, setZoom] = useState(1);
 
   // Load designs on mount
   useEffect(() => {
@@ -98,6 +100,18 @@ const MainLayout: React.FC = () => {
       ...currentDesign,
       roomDimensions: { width, height },
     });
+  };
+
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + 0.1, 2));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - 0.1, 0.5));
+  };
+
+  const handleResetZoom = () => {
+    setZoom(1);
   };
 
   const addFurniture = (furniture: FurnitureItem) => {
@@ -283,6 +297,29 @@ const MainLayout: React.FC = () => {
                   />
                   <span className="text-sm text-gray-600">Show Grid</span>
                 </label>
+                <div className="flex items-center gap-1 ml-4 border-l pl-4">
+                  <button
+                    onClick={handleZoomOut}
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={handleResetZoom}
+                    className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors min-w-[3rem]"
+                    title="Reset Zoom"
+                  >
+                    {Math.round(zoom * 100)}%
+                  </button>
+                  <button
+                    onClick={handleZoomIn}
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
               </>
             )}
           </div>
@@ -307,6 +344,7 @@ const MainLayout: React.FC = () => {
               selectedItemId={selectedItemId}
               onSelectItem={setSelectedItemId}
               onUpdateFurniture={updateFurniture}
+              zoom={zoom}
             />
           ) : (
             <WallCanvas

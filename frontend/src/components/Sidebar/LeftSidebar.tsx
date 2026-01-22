@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType, Design, User, FurnitureType, WallObjectType } from '../../types';
 import { FURNITURE_TYPES, WALL_OBJECT_TYPES } from '../../config/furnitureConfig';
+import * as LucideIcons from 'lucide-react';
 
 interface LeftSidebarProps {
   viewMode: ViewMode;
@@ -37,6 +38,13 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const generateId = () => Math.random().toString(36).substr(2, 9);
+
+  // Helper function to get icon component
+  const getIcon = (iconName?: string) => {
+    if (!iconName) return null;
+    const Icon = (LucideIcons as any)[iconName];
+    return Icon ? <Icon className="w-4 h-4" /> : null;
+  };
 
   const handleAddFurniture = (furnitureType: FurnitureType) => {
     const furniture: FurnitureItem = {
@@ -90,17 +98,17 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   };
 
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 overflow-y-auto flex flex-col transition-all duration-300`}>
+    <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white shadow-lg overflow-y-auto flex flex-col transition-all duration-300`}>
       {/* Header with Toggle */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-b from-white to-gray-50">
         {!isCollapsed && <h1 className="text-xl font-bold text-gray-900">Room Planner</h1>}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 hover:bg-gray-100 rounded"
+          className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <svg
-            className="w-5 h-5 text-gray-600"
+            className="w-5 h-5 text-gray-700"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -115,14 +123,14 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       </div>
 
       {/* View Mode Toggle */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-100">
         {isCollapsed ? (
           <div className="flex flex-col space-y-2">
             <button
               onClick={() => onViewModeChange('room')}
-              className={`py-2 px-2 rounded font-medium text-xs ${
+              className={`py-2 px-2 rounded-lg font-semibold text-xs transition-all ${
                 viewMode === 'room'
-                  ? 'bg-primary text-white'
+                  ? 'bg-primary text-white shadow-md'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
               title="Room View"
@@ -131,9 +139,9 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </button>
             <button
               onClick={() => onViewModeChange('wall')}
-              className={`py-2 px-2 rounded font-medium text-xs ${
+              className={`py-2 px-2 rounded-lg font-semibold text-xs transition-all ${
                 viewMode === 'wall'
-                  ? 'bg-primary text-white'
+                  ? 'bg-primary text-white shadow-md'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
               title="Wall View"
@@ -142,23 +150,23 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </button>
           </div>
         ) : (
-          <div className="flex space-x-2">
+          <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
             <button
               onClick={() => onViewModeChange('room')}
-              className={`flex-1 py-2 px-4 rounded font-medium ${
+              className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all ${
                 viewMode === 'room'
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Room
             </button>
             <button
               onClick={() => onViewModeChange('wall')}
-              className={`flex-1 py-2 px-4 rounded font-medium ${
+              className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all ${
                 viewMode === 'wall'
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Wall
@@ -172,36 +180,45 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
         {viewMode === 'room' ? (
           <>
             {/* Furniture Library */}
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 mb-3">Add Furniture</h2>
+            <div className="p-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">Add Furniture</h2>
               <div className="space-y-1">
                 {FURNITURE_TYPES.map((furnitureType) => (
                   <button
                     key={furnitureType.type}
                     onClick={() => handleAddFurniture(furnitureType)}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
                   >
-                    {furnitureType.name}
+                    <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                      {getIcon(furnitureType.icon)}
+                    </span>
+                    <span className="font-medium">{furnitureType.name}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Door and Window */}
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 mb-3">Add Elements</h2>
+            <div className="p-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">Add Elements</h2>
               <div className="space-y-1">
                 <button
                   onClick={handleAddDoor}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
                 >
-                  Door
+                  <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                    {getIcon('DoorOpen')}
+                  </span>
+                  <span className="font-medium">Door</span>
                 </button>
                 <button
                   onClick={handleAddWindow}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
                 >
-                  Window
+                  <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                    {getIcon('RectangleHorizontal')}
+                  </span>
+                  <span className="font-medium">Window</span>
                 </button>
               </div>
             </div>
@@ -209,8 +226,8 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
         ) : (
           <>
             {/* Wall Selector */}
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 mb-3">Select Wall</h2>
+            <div className="p-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">Select Wall</h2>
               <div className="grid grid-cols-2 gap-2">
                 {(['north', 'south', 'east', 'west'] as WallType[]).map((wall) => (
                   <button
@@ -229,16 +246,19 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </div>
 
             {/* Wall Objects Library */}
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 mb-3">Add Wall Objects</h2>
+            <div className="p-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">Add Wall Objects</h2>
               <div className="space-y-1">
                 {WALL_OBJECT_TYPES.map((wallObjectType) => (
                   <button
                     key={wallObjectType.type}
                     onClick={() => handleAddWallObject(wallObjectType)}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
                   >
-                    {wallObjectType.name}
+                    <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                      {getIcon(wallObjectType.icon)}
+                    </span>
+                    <span className="font-medium">{wallObjectType.name}</span>
                   </button>
                 ))}
               </div>
