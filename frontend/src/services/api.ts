@@ -11,27 +11,46 @@ const api = axios.create({
   },
 });
 
+// Add token to requests if it exists
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Auth API
 export const authAPI = {
   register: async (email: string, username: string, password: string) => {
-    const response = await api.post<{ user: User }>('/auth/register', {
+    const response = await api.post<{ user: User; token: string }>('/auth/register', {
       email,
       username,
       password,
     });
+    // Store token in localStorage
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
     return response.data;
   },
 
   login: async (email: string, password: string) => {
-    const response = await api.post<{ user: User }>('/auth/login', {
+    const response = await api.post<{ user: User; token: string }>('/auth/login', {
       email,
       password,
     });
+    // Store token in localStorage
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
     return response.data;
   },
 
   logout: async () => {
     const response = await api.post('/auth/logout');
+    // Remove token from localStorage
+    localStorage.removeItem('token');
     return response.data;
   },
 

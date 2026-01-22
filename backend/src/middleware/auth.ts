@@ -7,7 +7,13 @@ export interface AuthRequest extends Request {
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction): void => {
   try {
-    const token = req.cookies.token;
+    // Check Authorization header first, then fall back to cookie
+    let token = req.cookies.token;
+
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
 
     if (!token) {
       res.status(401).json({ message: 'Authentication required' });

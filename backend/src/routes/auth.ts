@@ -58,6 +58,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         username: user.username,
       },
+      token,
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -109,6 +110,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         username: user.username,
       },
+      token,
     });
   } catch (error) {
     console.error('Login error:', error);
