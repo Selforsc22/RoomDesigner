@@ -14,7 +14,7 @@ import type { FurnitureType, WallObjectType } from '../types';
 
 export const FURNITURE_TYPES: FurnitureType[] = [
   // ===== BEDS =====
-  { type: 'twin-bed', name: 'Twin Bed', width: 3.2, height: 6.2, color: '#8B7355', icon: 'Bed' },
+  { type: 'twin-bed', name: 'Twin Bed', width: 3.2, height: 6.2, color: '#8B7355', icon: 'Bed', category: 'furniture' },
   { type: 'full-bed', name: 'Full Bed', width: 4.5, height: 6.2, color: '#8B7355', icon: 'Bed' },
   { type: 'queen-bed', name: 'Queen Bed', width: 5, height: 6.7, color: '#8B7355', icon: 'BedDouble' },
   { type: 'king-bed', name: 'King Bed', width: 6.3, height: 6.7, color: '#8B7355', icon: 'BedDouble' },

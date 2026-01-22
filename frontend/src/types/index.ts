@@ -14,6 +14,14 @@ export interface FurnitureItem {
   height: number;
   rotation: number;
   color: string;
+  // Optional properties for future features
+  zHeight?: number; // Height off ground in feet (for 3D positioning)
+  // Lighting properties (for studio equipment)
+  isLight?: boolean;
+  lightIntensity?: number; // 0-100
+  colorTemperature?: number; // Kelvin (3200-6500)
+  beamAngle?: number; // Degrees (15-120)
+  lightDirection?: number; // Angle in degrees (0-360)
 }
 
 export interface WallObject {
@@ -72,6 +80,13 @@ export interface FurnitureType {
   height: number;
   color: string;
   icon?: string;
+  category?: 'furniture' | 'lighting' | 'camera' | 'backdrop';
+  // Default lighting properties (for studio equipment)
+  isLight?: boolean;
+  defaultIntensity?: number;
+  defaultColorTemp?: number;
+  defaultBeamAngle?: number;
+  defaultZHeight?: number;
 }
 
 export interface WallObjectType {
