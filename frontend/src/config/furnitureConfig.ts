@@ -26,12 +26,13 @@ export const FURNITURE_TYPES: FurnitureType[] = [
   // ===== TABLES =====
   { type: 'coffee-table', name: 'Coffee Table', width: 4, height: 2, color: '#6B4423' },
   { type: 'side-table', name: 'Side Table', width: 2, height: 2, color: '#6B4423' },
-  { type: 'desk', name: 'Desk', width: 5, height: 2.5, color: '#6B4423' },
+  { type: 'desk', name: 'Desk', width: 5, height: 2, color: '#6B4423' },
 
   // ===== STORAGE =====
   { type: 'dresser', name: 'Dresser', width: 4, height: 1.5, color: '#5C4033' },
   { type: 'tv-stand', name: 'TV Stand', width: 5, height: 1.5, color: '#5C4033' },
   { type: 'bookshelf', name: 'Bookshelf', width: 3, height: 1, color: '#5C4033' },
+  { type: 'rolling-cart', name: 'Rolling Cart', width: 4, height: 1.5, color: '#71797E' },
 
   // ===== DECOR =====
   { type: 'lamp', name: 'Lamp', width: 1, height: 1, color: '#F59E0B' },
