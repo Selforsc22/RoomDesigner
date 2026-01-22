@@ -3,6 +3,8 @@ import type { User, Design } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+console.log('API Service: Initializing with API_URL:', API_URL);
+
 // Test localStorage availability on module load
 try {
   const testKey = '__localStorage_test__';
