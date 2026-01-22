@@ -108,7 +108,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
     <div className="flex items-center justify-center p-8 min-h-full">
       <div
         ref={canvasRef}
-        className="relative bg-white border-2 border-gray-300 shadow-lg"
+        className="relative bg-white rounded-lg shadow-2xl ring-1 ring-gray-200"
         style={{
           width: canvasWidth,
           height: canvasHeight,
@@ -159,7 +159,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           return (
             <div
               key={door.id}
-              className="absolute bg-amber-700"
+              className="absolute bg-amber-700 shadow-sm"
               style={{
                 left: x,
                 top: y,
@@ -180,7 +180,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           return (
             <div
               key={window.id}
-              className="absolute bg-blue-300 border border-blue-500"
+              className="absolute bg-blue-300 border-2 border-blue-500 shadow-sm"
               style={{
                 left: x,
                 top: y,
@@ -200,8 +200,10 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           return (
             <div
               key={item.id}
-              className={`absolute cursor-move flex items-center justify-center text-xs font-medium ${
-                selectedItemId === item.id ? 'ring-2 ring-primary' : ''
+              className={`absolute cursor-move flex items-center justify-center text-xs font-semibold rounded-md transition-all duration-150 ${
+                selectedItemId === item.id
+                  ? 'ring-2 ring-primary shadow-lg scale-105'
+                  : 'shadow-md hover:shadow-lg hover:scale-105'
               }`}
               style={{
                 left: item.x * SCALE,
@@ -213,7 +215,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
               }}
               onMouseDown={(e) => handleMouseDown(e, item.id)}
             >
-              <span className="text-white text-center px-1 select-none pointer-events-none">
+              <span className="text-white text-center px-1 select-none pointer-events-none drop-shadow-sm">
                 {item.name}
               </span>
             </div>

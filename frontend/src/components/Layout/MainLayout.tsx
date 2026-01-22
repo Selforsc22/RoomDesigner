@@ -240,20 +240,20 @@ const MainLayout: React.FC = () => {
       {/* Main Canvas Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <div className="bg-white shadow-sm border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-6">
             <input
               type="text"
               value={currentDesign.name}
               onChange={(e) =>
                 setCurrentDesign({ ...currentDesign, name: e.target.value })
               }
-              className="text-lg font-semibold border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="text-lg font-bold border-0 border-b-2 border-transparent hover:border-gray-200 focus:border-primary px-2 py-1 focus:outline-none transition-all bg-transparent"
             />
             {viewMode === 'room' && (
               <>
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-600">Width:</label>
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
+                  <label className="text-sm font-medium text-gray-700">Width:</label>
                   <input
                     type="number"
                     min="8"
@@ -266,12 +266,12 @@ const MainLayout: React.FC = () => {
                         currentDesign.roomDimensions.height
                       )
                     }
-                    className="w-20 border border-gray-300 rounded px-2 py-1 text-sm"
+                    className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                   />
-                  <span className="text-sm text-gray-600">ft</span>
+                  <span className="text-sm text-gray-500">ft</span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-600">Height:</label>
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
+                  <label className="text-sm font-medium text-gray-700">Height:</label>
                   <input
                     type="number"
                     min="8"
@@ -284,18 +284,18 @@ const MainLayout: React.FC = () => {
                         parseFloat(e.target.value)
                       )
                     }
-                    className="w-20 border border-gray-300 rounded px-2 py-1 text-sm"
+                    className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                   />
-                  <span className="text-sm text-gray-600">ft</span>
+                  <span className="text-sm text-gray-500">ft</span>
                 </div>
-                <label className="flex items-center space-x-2">
+                <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                   <input
                     type="checkbox"
                     checked={showGrid}
                     onChange={(e) => setShowGrid(e.target.checked)}
-                    className="rounded"
+                    className="rounded text-primary focus:ring-primary"
                   />
-                  <span className="text-sm text-gray-600">Show Grid</span>
+                  <span className="text-sm font-medium text-gray-700">Show Grid</span>
                 </label>
                 <div className="flex items-center gap-1 ml-4 border-l pl-4">
                   <button
@@ -333,7 +333,7 @@ const MainLayout: React.FC = () => {
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 overflow-auto bg-gray-100">
+        <div className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-gray-100">
           {viewMode === 'room' ? (
             <RoomCanvas
               roomDimensions={currentDesign.roomDimensions}
