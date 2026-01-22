@@ -28,10 +28,11 @@ PORT=5000
 
 **Environment Variables:**
 ```
-VITE_API_URL=https://lovely-enthusiasm-production.up.railway.app/api
+VITE_API_URL=https://roomdesigner-production.up.railway.app/api
 ```
 
 ⚠️ **CRITICAL**: The `VITE_API_URL` must end with `/api` and must be the full Railway URL.
+⚠️ **Replace with your actual Railway URL** - check Railway dashboard for the correct domain.
 
 ## Debugging Authentication Issues
 
