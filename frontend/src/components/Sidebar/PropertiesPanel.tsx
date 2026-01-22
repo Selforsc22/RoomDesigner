@@ -15,7 +15,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   if (!selectedItem) {
     return (
-      <div className="w-72 bg-white border-l border-gray-200 p-6">
+      <div className="w-60 bg-white border-l border-gray-200 p-6">
         <div className="text-center text-gray-500">
           <p>Select an item to edit</p>
         </div>
@@ -51,7 +51,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   };
 
   return (
-    <div className="w-72 bg-white border-l border-gray-200 overflow-y-auto">
+    <div className="w-60 bg-white border-l border-gray-200 overflow-y-auto">
       <div className="p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Properties</h2>
 

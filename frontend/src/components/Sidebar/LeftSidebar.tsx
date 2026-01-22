@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType, Design, User, FurnitureType, WallObjectType } from '../../types';
+import { FURNITURE_TYPES, WALL_OBJECT_TYPES } from '../../config/furnitureConfig';
 
 interface LeftSidebarProps {
   viewMode: ViewMode;
@@ -18,40 +19,6 @@ interface LeftSidebarProps {
   onLogout: () => void;
 }
 
-const FURNITURE_TYPES: FurnitureType[] = [
-  // Beds
-  { type: 'twin-bed', name: 'Twin Bed', width: 3.2, height: 6.2, color: '#8B7355' },
-  { type: 'full-bed', name: 'Full Bed', width: 4.5, height: 6.2, color: '#8B7355' },
-  { type: 'queen-bed', name: 'Queen Bed', width: 5, height: 6.7, color: '#8B7355' },
-  { type: 'king-bed', name: 'King Bed', width: 6.3, height: 6.7, color: '#8B7355' },
-  // Seating
-  { type: 'sofa', name: 'Sofa', width: 7, height: 3, color: '#4A5568' },
-  { type: 'loveseat', name: 'Loveseat', width: 5, height: 3, color: '#4A5568' },
-  { type: 'chair', name: 'Chair', width: 2, height: 2, color: '#4A5568' },
-  // Tables
-  { type: 'coffee-table', name: 'Coffee Table', width: 4, height: 2, color: '#6B4423' },
-  { type: 'side-table', name: 'Side Table', width: 2, height: 2, color: '#6B4423' },
-  { type: 'desk', name: 'Desk', width: 5, height: 2.5, color: '#6B4423' },
-  // Storage
-  { type: 'dresser', name: 'Dresser', width: 4, height: 1.5, color: '#5C4033' },
-  { type: 'tv-stand', name: 'TV Stand', width: 5, height: 1.5, color: '#5C4033' },
-  { type: 'bookshelf', name: 'Bookshelf', width: 3, height: 1, color: '#5C4033' },
-  // Decor
-  { type: 'lamp', name: 'Lamp', width: 1, height: 1, color: '#F59E0B' },
-  { type: 'plant', name: 'Plant', width: 1.5, height: 1.5, color: '#10B981' },
-  { type: 'rug', name: 'Rug', width: 8, height: 6, color: '#9CA3AF' },
-];
-
-const WALL_OBJECT_TYPES: WallObjectType[] = [
-  { type: 'small-frame', name: 'Small Frame', width: 2, height: 2 },
-  { type: 'medium-frame', name: 'Medium Frame', width: 3, height: 4 },
-  { type: 'large-frame', name: 'Large Frame', width: 5, height: 4 },
-  { type: 'mirror', name: 'Mirror', width: 3, height: 5 },
-  { type: 'shelf', name: 'Shelf', width: 4, height: 0.5 },
-  { type: 'clock', name: 'Clock', width: 2, height: 2 },
-  { type: 'tv', name: 'TV', width: 5, height: 3 },
-];
-
 const LeftSidebar: React.FC<LeftSidebarProps> = ({
   viewMode,
   onViewModeChange,
@@ -68,6 +35,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   user,
   onLogout,
 }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const handleAddFurniture = (furnitureType: FurnitureType) => {
@@ -122,40 +90,85 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 overflow-y-auto flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-900">Room & Wall Planner</h1>
+    <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 overflow-y-auto flex flex-col transition-all duration-300`}>
+      {/* Header with Toggle */}
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+        {!isCollapsed && <h1 className="text-xl font-bold text-gray-900">Room Planner</h1>}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="p-2 hover:bg-gray-100 rounded"
+          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <svg
+            className="w-5 h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            {isCollapsed ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            )}
+          </svg>
+        </button>
       </div>
 
       {/* View Mode Toggle */}
       <div className="p-4 border-b border-gray-200">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => onViewModeChange('room')}
-            className={`flex-1 py-2 px-4 rounded font-medium ${
-              viewMode === 'room'
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Room
-          </button>
-          <button
-            onClick={() => onViewModeChange('wall')}
-            className={`flex-1 py-2 px-4 rounded font-medium ${
-              viewMode === 'wall'
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Wall
-          </button>
-        </div>
+        {isCollapsed ? (
+          <div className="flex flex-col space-y-2">
+            <button
+              onClick={() => onViewModeChange('room')}
+              className={`py-2 px-2 rounded font-medium text-xs ${
+                viewMode === 'room'
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              title="Room View"
+            >
+              R
+            </button>
+            <button
+              onClick={() => onViewModeChange('wall')}
+              className={`py-2 px-2 rounded font-medium text-xs ${
+                viewMode === 'wall'
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              title="Wall View"
+            >
+              W
+            </button>
+          </div>
+        ) : (
+          <div className="flex space-x-2">
+            <button
+              onClick={() => onViewModeChange('room')}
+              className={`flex-1 py-2 px-4 rounded font-medium ${
+                viewMode === 'room'
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Room
+            </button>
+            <button
+              onClick={() => onViewModeChange('wall')}
+              className={`flex-1 py-2 px-4 rounded font-medium ${
+                viewMode === 'wall'
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Wall
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Content based on view mode */}
-      <div className="flex-1 overflow-y-auto">
+      {!isCollapsed && <div className="flex-1 overflow-y-auto">
         {viewMode === 'room' ? (
           <>
             {/* Furniture Library */}
@@ -260,10 +273,10 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             ))}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* User Profile */}
-      <div className="p-4 border-t border-gray-200">
+      {!isCollapsed && <div className="p-4 border-t border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-semibold">
@@ -278,7 +291,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             Logout
           </button>
         </div>
-      </div>
+      </div>}
     </div>
   );
 };
