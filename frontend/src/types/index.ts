@@ -52,6 +52,17 @@ export interface Window {
   height: number;
 }
 
+export interface RoomSection {
+  id: string;
+  name?: string; // Optional name like "Living Area", "Kitchen Nook", etc.
+  x: number; // Position relative to overall floor plan origin
+  y: number; // Position relative to overall floor plan origin
+  width: number; // Width of this section in feet
+  height: number; // Height of this section in feet
+  // Future: Add connection metadata for rendering logic
+  connectedTo?: string[]; // IDs of adjacent sections for rendering walls
+}
+
 export interface Design {
   _id: string;
   userId: string;
@@ -61,6 +72,8 @@ export interface Design {
     width: number;
     height: number;
   };
+  // Optional: Support for complex room shapes (L, T, U, etc.)
+  roomSections?: RoomSection[]; // When present, overrides single roomDimensions
   furniture: FurnitureItem[];
   wallObjects: WallObject[];
   doors: Door[];
