@@ -20,29 +20,58 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Log response errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    return Promise.reject(error);
+  }
+);
+
 // Auth API
 export const authAPI = {
   register: async (email: string, username: string, password: string) => {
+    console.log('Register: Making request to backend...');
     const response = await api.post<{ user: User; token: string }>('/auth/register', {
       email,
       username,
       password,
     });
+    console.log('Register: Response received', { hasToken: !!response.data.token });
     // Store token in localStorage
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
+      console.log('Register: Token stored in localStorage');
+      // Verify storage
+      const storedToken = localStorage.getItem('token');
+      console.log('Register: Token verification', { stored: !!storedToken });
+    } else {
+      console.error('Register: No token in response!', response.data);
     }
     return response.data;
   },
 
   login: async (email: string, password: string) => {
+    console.log('Login: Making request to backend...');
     const response = await api.post<{ user: User; token: string }>('/auth/login', {
       email,
       password,
     });
+    console.log('Login: Response received', { hasToken: !!response.data.token });
     // Store token in localStorage
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
+      console.log('Login: Token stored in localStorage');
+      // Verify storage
+      const storedToken = localStorage.getItem('token');
+      console.log('Login: Token verification', { stored: !!storedToken });
+    } else {
+      console.error('Login: No token in response!', response.data);
     }
     return response.data;
   },

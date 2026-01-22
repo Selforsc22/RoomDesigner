@@ -45,13 +45,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (email: string, password: string) => {
+    console.log('AuthContext: Starting login...');
     const data = await authAPI.login(email, password);
+    console.log('AuthContext: Login successful', { hasUser: !!data.user });
     setUser(data.user);
+    console.log('AuthContext: User state updated');
   };
 
   const register = async (email: string, username: string, password: string) => {
+    console.log('AuthContext: Starting registration...');
     const data = await authAPI.register(email, username, password);
+    console.log('AuthContext: Registration successful', { hasUser: !!data.user });
     setUser(data.user);
+    console.log('AuthContext: User state updated');
   };
 
   const logout = async () => {

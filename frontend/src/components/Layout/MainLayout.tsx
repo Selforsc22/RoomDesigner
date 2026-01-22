@@ -24,7 +24,12 @@ const MainLayout: React.FC = () => {
 
   const loadDesigns = async () => {
     try {
+      console.log('MainLayout: Loading designs...');
+      const token = localStorage.getItem('token');
+      console.log('MainLayout: Token check', { hasToken: !!token });
+
       const data = await designAPI.getAll();
+      console.log('MainLayout: Designs loaded', { count: data.length });
       setDesigns(data);
       if (data.length === 0) {
         // Create a new design if none exist
@@ -32,8 +37,17 @@ const MainLayout: React.FC = () => {
       } else {
         setCurrentDesign(data[0]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load designs:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        hasToken: !!localStorage.getItem('token'),
+      });
+      // If 401, token might be missing or invalid
+      if (error.response?.status === 401) {
+        console.error('Authentication failed - no valid token');
+      }
     }
   };
 
