@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import type { ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType, Design, User, FurnitureType, WallObjectType } from '../../types';
+import type { ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType, Design, User, FurnitureType, WallObjectType, RoomSection } from '../../types';
 import { FURNITURE_TYPES, WALL_OBJECT_TYPES } from '../../config/furnitureConfig';
+import SectionManager from '../RoomSections/SectionManager';
 import * as LucideIcons from 'lucide-react';
 
 interface LeftSidebarProps {
@@ -18,6 +19,10 @@ interface LeftSidebarProps {
   onNewDesign: () => void;
   user: User | null;
   onLogout: () => void;
+  roomSections?: RoomSection[];
+  onUpdateRoomSection?: (sectionId: string, updates: Partial<RoomSection>) => void;
+  onAddRoomSection?: () => void;
+  onDeleteRoomSection?: (sectionId: string) => void;
 }
 
 const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -35,6 +40,10 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onNewDesign,
   user,
   onLogout,
+  roomSections,
+  onUpdateRoomSection,
+  onAddRoomSection,
+  onDeleteRoomSection,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -224,6 +233,18 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* Room Sections Manager */}
+            {roomSections && roomSections.length > 0 && onUpdateRoomSection && onAddRoomSection && onDeleteRoomSection && (
+              <div className="p-4 border-b border-gray-100">
+                <SectionManager
+                  sections={roomSections}
+                  onUpdateSection={onUpdateRoomSection}
+                  onAddSection={onAddRoomSection}
+                  onDeleteSection={onDeleteRoomSection}
+                />
+              </div>
+            )}
           </>
         ) : (
           <>

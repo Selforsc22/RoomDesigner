@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import type { Design, ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType } from '../../types';
+import type { Design, ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType, RoomSection } from '../../types';
 import { designAPI } from '../../services/api';
 import LeftSidebar from '../Sidebar/LeftSidebar';
 import PropertiesPanel from '../Sidebar/PropertiesPanel';
 import RoomCanvas from '../Canvas/RoomCanvas';
 import WallCanvas from '../Canvas/WallCanvas';
-import { ZoomIn, ZoomOut, Undo, Redo } from 'lucide-react';
+import { ZoomIn, ZoomOut, Undo, Redo, ChevronDown } from 'lucide-react';
+import { ROOM_TEMPLATES, instantiateTemplate, calculateBounds } from '../../config/roomTemplates';
 
 const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -20,6 +21,8 @@ const MainLayout: React.FC = () => {
   const [zoom, setZoom] = useState(1);
   const [history, setHistory] = useState<Design[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('simple');
+  const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
 
   // Load designs on mount
   useEffect(() => {
@@ -102,6 +105,96 @@ const MainLayout: React.FC = () => {
       ...currentDesign,
       roomDimensions: { width, height },
     });
+  };
+
+  const applyRoomTemplate = (templateId: string) => {
+    if (!currentDesign) return;
+
+    const template = ROOM_TEMPLATES.find(t => t.id === templateId);
+    if (!template) return;
+
+    setSelectedTemplateId(templateId);
+    setShowTemplateDropdown(false);
+
+    if (templateId === 'simple') {
+      // Simple room - use single roomDimensions, clear roomSections
+      setCurrentDesign({
+        ...currentDesign,
+        roomSections: undefined,
+        roomDimensions: { width: 20, height: 15 },
+      });
+    } else {
+      // Multi-section room - instantiate template
+      const sections = instantiateTemplate(template);
+      const bounds = calculateBounds(sections);
+
+      setCurrentDesign({
+        ...currentDesign,
+        roomSections: sections,
+        roomDimensions: bounds, // Keep for backward compatibility
+      });
+    }
+  };
+
+  const updateRoomSection = (sectionId: string, updates: Partial<RoomSection>) => {
+    if (!currentDesign || !currentDesign.roomSections) return;
+
+    const updatedSections = currentDesign.roomSections.map(section =>
+      section.id === sectionId ? { ...section, ...updates } : section
+    );
+
+    const bounds = calculateBounds(updatedSections);
+
+    setCurrentDesign({
+      ...currentDesign,
+      roomSections: updatedSections,
+      roomDimensions: bounds,
+    });
+  };
+
+  const addRoomSection = () => {
+    if (!currentDesign) return;
+
+    const newSection: RoomSection = {
+      id: `section-${Date.now()}`,
+      name: `Section ${(currentDesign.roomSections?.length || 0) + 1}`,
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 10,
+    };
+
+    const updatedSections = [...(currentDesign.roomSections || []), newSection];
+    const bounds = calculateBounds(updatedSections);
+
+    setCurrentDesign({
+      ...currentDesign,
+      roomSections: updatedSections,
+      roomDimensions: bounds,
+    });
+  };
+
+  const deleteRoomSection = (sectionId: string) => {
+    if (!currentDesign || !currentDesign.roomSections) return;
+
+    const updatedSections = currentDesign.roomSections.filter(s => s.id !== sectionId);
+
+    if (updatedSections.length === 0) {
+      // If all sections deleted, revert to simple room
+      setCurrentDesign({
+        ...currentDesign,
+        roomSections: undefined,
+        roomDimensions: { width: 20, height: 15 },
+      });
+      setSelectedTemplateId('simple');
+    } else {
+      const bounds = calculateBounds(updatedSections);
+      setCurrentDesign({
+        ...currentDesign,
+        roomSections: updatedSections,
+        roomDimensions: bounds,
+      });
+    }
   };
 
   const handleZoomIn = () => {
@@ -274,6 +367,10 @@ const MainLayout: React.FC = () => {
         onNewDesign={createNewDesign}
         user={user}
         onLogout={logout}
+        roomSections={currentDesign.roomSections}
+        onUpdateRoomSection={updateRoomSection}
+        onAddRoomSection={addRoomSection}
+        onDeleteRoomSection={deleteRoomSection}
       />
 
       {/* Main Canvas Area */}
@@ -291,8 +388,49 @@ const MainLayout: React.FC = () => {
             />
             {viewMode === 'room' && (
               <>
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-                  <label className="text-sm font-medium text-gray-700">Width:</label>
+                {/* Room Template Selector */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowTemplateDropdown(!showTemplateDropdown)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+                  >
+                    <span className="text-sm font-medium text-gray-700">
+                      {ROOM_TEMPLATES.find(t => t.id === selectedTemplateId)?.name || 'Room Type'}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  </button>
+
+                  {showTemplateDropdown && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowTemplateDropdown(false)}
+                      />
+                      <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-96 overflow-y-auto">
+                        {ROOM_TEMPLATES.map((template) => (
+                          <button
+                            key={template.id}
+                            onClick={() => applyRoomTemplate(template.id)}
+                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                              selectedTemplateId === template.id ? 'bg-primary/5' : ''
+                            }`}
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-medium text-gray-900">{template.name}</span>
+                              <span className="text-xs text-gray-500 mt-0.5">{template.description}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Width/Height controls - only show for simple room */}
+                {!currentDesign.roomSections && (
+                  <>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
+                      <label className="text-sm font-medium text-gray-700">Width:</label>
                   <input
                     type="number"
                     min="8"
@@ -327,6 +465,9 @@ const MainLayout: React.FC = () => {
                   />
                   <span className="text-sm text-gray-500">ft</span>
                 </div>
+                  </>
+                )}
+
                 <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                   <input
                     type="checkbox"
@@ -394,6 +535,7 @@ const MainLayout: React.FC = () => {
           {viewMode === 'room' ? (
             <RoomCanvas
               roomDimensions={currentDesign.roomDimensions}
+              roomSections={currentDesign.roomSections}
               furniture={currentDesign.furniture}
               doors={currentDesign.doors}
               windows={currentDesign.windows}
@@ -401,6 +543,7 @@ const MainLayout: React.FC = () => {
               selectedItemId={selectedItemId}
               onSelectItem={setSelectedItemId}
               onUpdateFurniture={updateFurniture}
+              onUpdateRoomSection={updateRoomSection}
               zoom={zoom}
             />
           ) : (

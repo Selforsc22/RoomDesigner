@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
-import type { FurnitureItem, Door, Window as WindowType } from '../../types';
+import type { FurnitureItem, Door, Window as WindowType, RoomSection } from '../../types';
 
 interface RoomCanvasProps {
   roomDimensions: { width: number; height: number };
+  roomSections?: RoomSection[];
   furniture: FurnitureItem[];
   doors: Door[];
   windows: WindowType[];
@@ -10,6 +11,7 @@ interface RoomCanvasProps {
   selectedItemId: string | null;
   onSelectItem: (id: string | null) => void;
   onUpdateFurniture: (id: string, updates: Partial<FurnitureItem>) => void;
+  onUpdateRoomSection?: (sectionId: string, updates: Partial<RoomSection>) => void;
   zoom?: number;
 }
 
@@ -17,6 +19,7 @@ const BASE_SCALE = 20; // pixels per foot
 
 const RoomCanvas: React.FC<RoomCanvasProps> = ({
   roomDimensions,
+  roomSections,
   furniture,
   doors,
   windows,
@@ -24,6 +27,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
   selectedItemId,
   onSelectItem,
   onUpdateFurniture,
+  // onUpdateRoomSection, // Reserved for future interactive section editing
   zoom = 1,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -32,8 +36,43 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
 
   const SCALE = BASE_SCALE * zoom;
+
+  // Calculate canvas size - use roomSections if available, otherwise roomDimensions
   const canvasWidth = roomDimensions.width * SCALE;
   const canvasHeight = roomDimensions.height * SCALE;
+
+  // Helper: Check if furniture fits within any section (or room if no sections)
+  const constrainToValidArea = (x: number, y: number, width: number, height: number): { x: number; y: number } => {
+    if (!roomSections || roomSections.length === 0) {
+      // Single room - constrain to room boundaries
+      const constrainedX = Math.max(0, Math.min(roomDimensions.width - width, x));
+      const constrainedY = Math.max(0, Math.min(roomDimensions.height - height, y));
+      return { x: constrainedX, y: constrainedY };
+    }
+
+    // Multi-section - find which section contains the center point
+    const centerX = x + width / 2;
+    const centerY = y + height / 2;
+
+    for (const section of roomSections) {
+      if (
+        centerX >= section.x &&
+        centerX <= section.x + section.width &&
+        centerY >= section.y &&
+        centerY <= section.y + section.height
+      ) {
+        // Constrain to this section's boundaries
+        const constrainedX = Math.max(section.x, Math.min(section.x + section.width - width, x));
+        const constrainedY = Math.max(section.y, Math.min(section.y + section.height - height, y));
+        return { x: constrainedX, y: constrainedY };
+      }
+    }
+
+    // If not in any section, constrain to overall bounds
+    const constrainedX = Math.max(0, Math.min(roomDimensions.width - width, x));
+    const constrainedY = Math.max(0, Math.min(roomDimensions.height - height, y));
+    return { x: constrainedX, y: constrainedY };
+  };
 
   const handleMouseDown = (e: React.MouseEvent, itemId: string) => {
     e.stopPropagation();
@@ -77,11 +116,10 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
     const effectiveWidth = isRotated ? item.height : item.width;
     const effectiveHeight = isRotated ? item.width : item.height;
 
-    // Constrain to room boundaries
-    newX = Math.max(0, Math.min(roomDimensions.width - effectiveWidth, newX));
-    newY = Math.max(0, Math.min(roomDimensions.height - effectiveHeight, newY));
+    // Constrain to valid area (room or section boundaries)
+    const constrained = constrainToValidArea(newX, newY, effectiveWidth, effectiveHeight);
 
-    onUpdateFurniture(draggingItem, { x: newX, y: newY });
+    onUpdateFurniture(draggingItem, { x: constrained.x, y: constrained.y });
   };
 
   const handleMouseUp = () => {
@@ -109,13 +147,38 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
     <div className="flex items-center justify-center p-8 min-h-full">
       <div
         ref={canvasRef}
-        className="relative bg-white rounded-lg shadow-2xl ring-1 ring-gray-200"
+        className="relative bg-gray-50 rounded-lg shadow-2xl ring-1 ring-gray-200"
         style={{
           width: canvasWidth,
           height: canvasHeight,
         }}
         onClick={handleCanvasClick}
       >
+        {/* Room Sections or Single Room Background */}
+        {roomSections && roomSections.length > 0 ? (
+          // Multi-section rendering
+          roomSections.map((section, index) => (
+            <div
+              key={section.id}
+              className="absolute bg-white border border-gray-300"
+              style={{
+                left: section.x * SCALE,
+                top: section.y * SCALE,
+                width: section.width * SCALE,
+                height: section.height * SCALE,
+              }}
+            >
+              {/* Section label */}
+              <div className="absolute top-2 left-2 text-xs font-medium text-gray-400 select-none pointer-events-none">
+                {section.name || `Section ${index + 1}`}
+              </div>
+            </div>
+          ))
+        ) : (
+          // Single room background
+          <div className="absolute inset-0 bg-white" />
+        )}
+
         {/* Grid */}
         {showGrid && (
           <svg
@@ -123,30 +186,65 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
             width={canvasWidth}
             height={canvasHeight}
           >
-            {/* Vertical lines */}
-            {Array.from({ length: roomDimensions.width + 1 }).map((_, i) => (
-              <line
-                key={`v-${i}`}
-                x1={i * SCALE}
-                y1={0}
-                x2={i * SCALE}
-                y2={canvasHeight}
-                stroke="#F3F4F6"
-                strokeWidth="1"
-              />
-            ))}
-            {/* Horizontal lines */}
-            {Array.from({ length: roomDimensions.height + 1 }).map((_, i) => (
-              <line
-                key={`h-${i}`}
-                x1={0}
-                y1={i * SCALE}
-                x2={canvasWidth}
-                y2={i * SCALE}
-                stroke="#F3F4F6"
-                strokeWidth="1"
-              />
-            ))}
+            {roomSections && roomSections.length > 0 ? (
+              // Grid for each section
+              roomSections.map((section) => (
+                <g key={`grid-${section.id}`}>
+                  {/* Vertical lines for this section */}
+                  {Array.from({ length: section.width + 1 }).map((_, i) => (
+                    <line
+                      key={`v-${section.id}-${i}`}
+                      x1={(section.x + i) * SCALE}
+                      y1={section.y * SCALE}
+                      x2={(section.x + i) * SCALE}
+                      y2={(section.y + section.height) * SCALE}
+                      stroke="#F3F4F6"
+                      strokeWidth="1"
+                    />
+                  ))}
+                  {/* Horizontal lines for this section */}
+                  {Array.from({ length: section.height + 1 }).map((_, i) => (
+                    <line
+                      key={`h-${section.id}-${i}`}
+                      x1={section.x * SCALE}
+                      y1={(section.y + i) * SCALE}
+                      x2={(section.x + section.width) * SCALE}
+                      y2={(section.y + i) * SCALE}
+                      stroke="#F3F4F6"
+                      strokeWidth="1"
+                    />
+                  ))}
+                </g>
+              ))
+            ) : (
+              // Grid for single room
+              <>
+                {/* Vertical lines */}
+                {Array.from({ length: roomDimensions.width + 1 }).map((_, i) => (
+                  <line
+                    key={`v-${i}`}
+                    x1={i * SCALE}
+                    y1={0}
+                    x2={i * SCALE}
+                    y2={canvasHeight}
+                    stroke="#F3F4F6"
+                    strokeWidth="1"
+                  />
+                ))}
+                {/* Horizontal lines */}
+                {Array.from({ length: roomDimensions.height + 1 }).map((_, i) => (
+                  <line
+                    key={`h-${i}`}
+                    x1={0}
+                    y1={i * SCALE}
+                    x2={canvasWidth}
+                    y2={i * SCALE}
+                    stroke="#F3F4F6"
+                    strokeWidth="1"
+                  />
+                ))}
+              </>
+            )}
           </svg>
         )}
 
