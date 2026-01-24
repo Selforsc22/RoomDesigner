@@ -58,12 +58,28 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   const handleAddFurniture = (furnitureType: FurnitureType) => {
     // Add random offset to prevent exact overlap
     const randomOffset = () => Math.random() * 2;
+
+    // Calculate spawn position - use first section center if available
+    let spawnX = 3 + randomOffset();
+    let spawnY = 3 + randomOffset();
+
+    if (roomSections && roomSections.length > 0) {
+      const firstSection = roomSections[0];
+      // Spawn in center of first section with offset
+      spawnX = firstSection.x + firstSection.width / 2 - furnitureType.width / 2 + randomOffset();
+      spawnY = firstSection.y + firstSection.height / 2 - furnitureType.height / 2 + randomOffset();
+
+      // Ensure within section bounds
+      spawnX = Math.max(firstSection.x, Math.min(firstSection.x + firstSection.width - furnitureType.width, spawnX));
+      spawnY = Math.max(firstSection.y, Math.min(firstSection.y + firstSection.height - furnitureType.height, spawnY));
+    }
+
     const furniture: FurnitureItem = {
       id: generateId(),
       type: furnitureType.type,
       name: furnitureType.name,
-      x: 3 + randomOffset(),
-      y: 3 + randomOffset(),
+      x: spawnX,
+      y: spawnY,
       width: furnitureType.width,
       height: furnitureType.height,
       rotation: 0,

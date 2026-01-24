@@ -41,6 +41,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
   const [resizingSectionId, setResizingSectionId] = useState<string | null>(null);
   const [resizeEdge, setResizeEdge] = useState<'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null>(null);
   const [sectionDragStart, setSectionDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [snapGuides, setSnapGuides] = useState<{ type: 'vertical' | 'horizontal'; position: number }[]>([]);
 
   const SCALE = BASE_SCALE * zoom;
   const SNAP_THRESHOLD = 0.5; // feet - snap when within this distance
@@ -202,27 +203,35 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
       newX = Math.round(newX * 2) / 2; // Snap to 0.5 ft grid
       newY = Math.round(newY * 2) / 2;
 
-      // Snap to other sections
+      // Snap to other sections and collect guides
+      const guides: { type: 'vertical' | 'horizontal'; position: number }[] = [];
+
       for (const otherSection of roomSections) {
         if (otherSection.id === draggingSectionId) continue;
 
         // Snap left edge to right edge
         if (Math.abs(newX - (otherSection.x + otherSection.width)) < SNAP_THRESHOLD) {
           newX = otherSection.x + otherSection.width;
+          guides.push({ type: 'vertical', position: newX });
         }
         // Snap right edge to left edge
         if (Math.abs((newX + section.width) - otherSection.x) < SNAP_THRESHOLD) {
           newX = otherSection.x - section.width;
+          guides.push({ type: 'vertical', position: otherSection.x });
         }
         // Snap top edge to bottom edge
         if (Math.abs(newY - (otherSection.y + otherSection.height)) < SNAP_THRESHOLD) {
           newY = otherSection.y + otherSection.height;
+          guides.push({ type: 'horizontal', position: newY });
         }
         // Snap bottom edge to top edge
         if (Math.abs((newY + section.height) - otherSection.y) < SNAP_THRESHOLD) {
           newY = otherSection.y - section.height;
+          guides.push({ type: 'horizontal', position: otherSection.y });
         }
       }
+
+      setSnapGuides(guides);
 
       // Constrain to canvas bounds
       newX = Math.max(0, Math.min(roomDimensions.width - section.width, newX));
@@ -286,6 +295,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
     setResizingSectionId(null);
     setResizeEdge(null);
     setSectionDragStart(null);
+    setSnapGuides([]);
   };
 
   // Add section mouse event listeners
@@ -397,6 +407,47 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
         ) : (
           // Single room background
           <div className="absolute inset-0 bg-white" />
+        )}
+
+        {/* Snap Alignment Guides */}
+        {snapGuides.length > 0 && (
+          <svg
+            className="absolute inset-0 pointer-events-none z-20"
+            width={canvasWidth}
+            height={canvasHeight}
+          >
+            {snapGuides.map((guide, index) => {
+              if (guide.type === 'vertical') {
+                return (
+                  <line
+                    key={`guide-${index}`}
+                    x1={guide.position * SCALE}
+                    y1={0}
+                    x2={guide.position * SCALE}
+                    y2={canvasHeight}
+                    stroke="#3B82F6"
+                    strokeWidth="2"
+                    strokeDasharray="4 4"
+                    opacity="0.8"
+                  />
+                );
+              } else {
+                return (
+                  <line
+                    key={`guide-${index}`}
+                    x1={0}
+                    y1={guide.position * SCALE}
+                    x2={canvasWidth}
+                    y2={guide.position * SCALE}
+                    stroke="#3B82F6"
+                    strokeWidth="2"
+                    strokeDasharray="4 4"
+                    opacity="0.8"
+                  />
+                );
+              }
+            })}
+          </svg>
         )}
 
         {/* Grid */}
