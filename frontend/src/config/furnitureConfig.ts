@@ -1,4 +1,10 @@
 import type { FurnitureType, WallObjectType } from '../types';
+import {
+  STUDIO_LIGHTING_TYPES,
+  CAMERA_EQUIPMENT_TYPES,
+  BACKDROP_TYPES,
+  STUDIO_ACCESSORIES,
+} from './studioLightingConfig';
 
 /**
  * Furniture Configuration
@@ -39,6 +45,18 @@ export const FURNITURE_TYPES: FurnitureType[] = [
   { type: 'lamp', name: 'Lamp', width: 1, height: 1, color: '#F59E0B', icon: 'Lamp' },
   { type: 'plant', name: 'Plant', width: 1.5, height: 1.5, color: '#10B981', icon: 'Trees' },
   { type: 'rug', name: 'Rug', width: 8, height: 6, color: '#9CA3AF', icon: 'Square' },
+
+  // ===== STUDIO LIGHTING =====
+  ...STUDIO_LIGHTING_TYPES,
+
+  // ===== CAMERA EQUIPMENT =====
+  ...CAMERA_EQUIPMENT_TYPES,
+
+  // ===== BACKDROPS =====
+  ...BACKDROP_TYPES,
+
+  // ===== STUDIO ACCESSORIES =====
+  ...STUDIO_ACCESSORIES,
 ];
 
 /**

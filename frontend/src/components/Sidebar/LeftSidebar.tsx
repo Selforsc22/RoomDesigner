@@ -46,7 +46,35 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onDeleteRoomSection,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['furniture']));
   const generateId = () => Math.random().toString(36).substr(2, 9);
+
+  const toggleCategory = (category: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(category)) {
+      newExpanded.delete(category);
+    } else {
+      newExpanded.add(category);
+    }
+    setExpandedCategories(newExpanded);
+  };
+
+  // Group furniture by category
+  const furnitureByCategory = FURNITURE_TYPES.reduce((acc, item) => {
+    const category = item.category || 'furniture';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(item);
+    return acc;
+  }, {} as Record<string, FurnitureType[]>);
+
+  const categoryLabels: Record<string, { name: string; icon: string }> = {
+    furniture: { name: 'Furniture', icon: 'Armchair' },
+    lighting: { name: 'Studio Lighting', icon: 'Lightbulb' },
+    camera: { name: 'Camera Equipment', icon: 'Camera' },
+    backdrop: { name: 'Backdrops', icon: 'Image' },
+  };
 
   // Helper function to get icon component
   const getIcon = (iconName?: string) => {
@@ -84,6 +112,15 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       height: furnitureType.height,
       rotation: 0,
       color: furnitureType.color,
+      // Copy lighting properties if this is a light
+      ...(furnitureType.isLight && {
+        isLight: true,
+        lightIntensity: furnitureType.defaultIntensity,
+        colorTemperature: furnitureType.defaultColorTemp,
+        beamAngle: furnitureType.defaultBeamAngle,
+        lightDirection: 0,
+        zHeight: furnitureType.defaultZHeight,
+      }),
     };
     onAddFurniture(furniture);
   };
@@ -206,23 +243,49 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       {!isCollapsed && <div className="flex-1 overflow-y-auto">
         {viewMode === 'room' ? (
           <>
-            {/* Furniture Library */}
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">Add Furniture</h2>
-              <div className="space-y-1">
-                {FURNITURE_TYPES.map((furnitureType) => (
-                  <button
-                    key={furnitureType.type}
-                    onClick={() => handleAddFurniture(furnitureType)}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
-                  >
-                    <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-                      {getIcon(furnitureType.icon)}
-                    </span>
-                    <span className="font-medium">{furnitureType.name}</span>
-                  </button>
-                ))}
-              </div>
+            {/* Furniture Library - Organized by Category */}
+            <div className="border-b border-gray-100">
+              {Object.entries(furnitureByCategory).map(([category, items]) => {
+                const categoryInfo = categoryLabels[category] || { name: category, icon: 'Box' };
+                const isExpanded = expandedCategories.has(category);
+
+                return (
+                  <div key={category} className="border-b border-gray-100 last:border-b-0">
+                    {/* Category Header */}
+                    <button
+                      onClick={() => toggleCategory(category)}
+                      className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        {getIcon(categoryInfo.icon)}
+                        <h2 className="font-bold text-gray-800 text-xs uppercase tracking-wider">
+                          {categoryInfo.name}
+                        </h2>
+                        <span className="text-xs text-gray-500">({items.length})</span>
+                      </div>
+                      {getIcon(isExpanded ? 'ChevronDown' : 'ChevronRight')}
+                    </button>
+
+                    {/* Category Items */}
+                    {isExpanded && (
+                      <div className="px-4 pb-4 space-y-1">
+                        {items.map((furnitureType) => (
+                          <button
+                            key={furnitureType.type}
+                            onClick={() => handleAddFurniture(furnitureType)}
+                            className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
+                          >
+                            <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                              {getIcon(furnitureType.icon)}
+                            </span>
+                            <span className="font-medium">{furnitureType.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Door and Window */}

@@ -213,6 +213,130 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             </div>
           )}
 
+          {/* Lighting Controls (for lights) */}
+          {type === 'furniture' && item.isLight && (
+            <>
+              {/* Light Intensity */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Light Intensity
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={item.lightIntensity || 80}
+                    onChange={(e) => onUpdate({ lightIntensity: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>0%</span>
+                    <span className="font-medium text-gray-700">{item.lightIntensity || 80}%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Color Temperature */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Color Temperature
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="3200"
+                    max="6500"
+                    step="100"
+                    value={item.colorTemperature || 5600}
+                    onChange={(e) => onUpdate({ colorTemperature: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs">
+                    <span className="text-orange-600">Warm</span>
+                    <span className="font-medium text-gray-700">{item.colorTemperature || 5600}K</span>
+                    <span className="text-blue-600">Cool</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Beam Angle */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Beam Angle
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="15"
+                    max="120"
+                    step="5"
+                    value={item.beamAngle || 60}
+                    onChange={(e) => onUpdate({ beamAngle: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Spot</span>
+                    <span className="font-medium text-gray-700">{item.beamAngle || 60}°</span>
+                    <span className="text-gray-500">Flood</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Height off Ground */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Height (ft)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="15"
+                  step="0.5"
+                  value={item.zHeight || 6}
+                  onChange={(e) => onUpdate({ zHeight: parseFloat(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                />
+                <p className="mt-1 text-xs text-gray-500">Height above floor</p>
+              </div>
+
+              {/* Light Direction */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Light Direction
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="360"
+                    step="15"
+                    value={item.lightDirection || 0}
+                    onChange={(e) => onUpdate({ lightDirection: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>0°</span>
+                    <span className="font-medium text-gray-700">{item.lightDirection || 0}°</span>
+                    <span>360°</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual Indicator */}
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <LucideIcons.Lightbulb className="w-4 h-4 text-yellow-600" />
+                  <span className="text-xs font-medium text-yellow-900">Light Source</span>
+                </div>
+                <p className="text-xs text-yellow-700">
+                  This item emits light with {item.lightIntensity || 80}% intensity at {item.colorTemperature || 5600}K
+                </p>
+              </div>
+            </>
+          )}
+
           {/* Image Upload (for wall objects) */}
           {type === 'wallObject' && (
             <div>
