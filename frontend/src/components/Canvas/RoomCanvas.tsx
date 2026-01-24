@@ -600,6 +600,92 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
             </div>
           );
         })}
+
+        {/* Light Beam Visualization */}
+        <svg
+          className="absolute inset-0 pointer-events-none"
+          width={canvasWidth}
+          height={canvasHeight}
+          style={{ zIndex: 5 }}
+        >
+          {furniture
+            .filter((item) => item.isLight && item.lightIntensity && item.lightIntensity > 0)
+            .map((light) => {
+              // Calculate light center position
+              const centerX = (light.x + light.width / 2) * SCALE;
+              const centerY = (light.y + light.height / 2) * SCALE;
+
+              // Light direction (0 = right, 90 = down, 180 = left, 270 = up)
+              const direction = light.lightDirection || 0;
+              const beamAngle = light.beamAngle || 60;
+              const intensity = light.lightIntensity || 80;
+              const colorTemp = light.colorTemperature || 5600;
+
+              // Calculate color based on temperature
+              // 3200K = warm (orange), 5600K = daylight (white), 6500K = cool (blue)
+              const getLightColor = (temp: number) => {
+                if (temp < 4000) return '#FFB84D'; // Warm orange
+                if (temp < 5000) return '#FFF4E6'; // Warm white
+                if (temp < 6000) return '#FFFFFF'; // Neutral white
+                return '#E6F3FF'; // Cool blue-white
+              };
+
+              const lightColor = getLightColor(colorTemp);
+
+              // Calculate beam length based on beam angle (wider = shorter visible range)
+              const beamLength = (120 - beamAngle) * 2 + 200;
+
+              // Calculate beam end points based on direction
+              const directionRad = (direction * Math.PI) / 180;
+              const halfBeamAngleRad = ((beamAngle / 2) * Math.PI) / 180;
+
+              // Calculate the three points of the beam triangle
+              const leftEdgeX = centerX + Math.cos(directionRad - halfBeamAngleRad) * beamLength;
+              const leftEdgeY = centerY + Math.sin(directionRad - halfBeamAngleRad) * beamLength;
+
+              const rightEdgeX = centerX + Math.cos(directionRad + halfBeamAngleRad) * beamLength;
+              const rightEdgeY = centerY + Math.sin(directionRad + halfBeamAngleRad) * beamLength;
+
+              const pathData = `M ${centerX} ${centerY} L ${leftEdgeX} ${leftEdgeY} L ${rightEdgeX} ${rightEdgeY} Z`;
+
+              return (
+                <g key={`light-${light.id}`}>
+                  {/* Light beam cone */}
+                  <path
+                    d={pathData}
+                    fill={lightColor}
+                    opacity={intensity / 400} // Scale opacity based on intensity
+                    stroke={lightColor}
+                    strokeWidth="1"
+                    strokeOpacity={intensity / 300}
+                  />
+
+                  {/* Light source indicator (small circle) */}
+                  <circle
+                    cx={centerX}
+                    cy={centerY}
+                    r={4}
+                    fill={lightColor}
+                    opacity={intensity / 100}
+                    stroke="#FFD700"
+                    strokeWidth="2"
+                  />
+
+                  {/* Direction indicator line */}
+                  <line
+                    x1={centerX}
+                    y1={centerY}
+                    x2={centerX + Math.cos(directionRad) * 30}
+                    y2={centerY + Math.sin(directionRad) * 30}
+                    stroke={lightColor}
+                    strokeWidth="2"
+                    opacity={intensity / 150}
+                    strokeDasharray="4 2"
+                  />
+                </g>
+              );
+            })}
+        </svg>
       </div>
     </div>
   );
