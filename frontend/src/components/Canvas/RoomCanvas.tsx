@@ -27,7 +27,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
   selectedItemId,
   onSelectItem,
   onUpdateFurniture,
-  // onUpdateRoomSection, // Reserved for future interactive section editing
+  onUpdateRoomSection,
   zoom = 1,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -35,7 +35,15 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
 
+  // Section editing state
+  const [hoveredSectionId, setHoveredSectionId] = useState<string | null>(null);
+  const [draggingSectionId, setDraggingSectionId] = useState<string | null>(null);
+  const [resizingSectionId, setResizingSectionId] = useState<string | null>(null);
+  const [resizeEdge, setResizeEdge] = useState<'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null>(null);
+  const [sectionDragStart, setSectionDragStart] = useState<{ x: number; y: number } | null>(null);
+
   const SCALE = BASE_SCALE * zoom;
+  const SNAP_THRESHOLD = 0.5; // feet - snap when within this distance
 
   // Calculate canvas size - use roomSections if available, otherwise roomDimensions
   const canvasWidth = roomDimensions.width * SCALE;
@@ -143,6 +151,155 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
     }
   };
 
+  // Section interaction handlers
+  const handleSectionMouseDown = (e: React.MouseEvent, sectionId: string, edge?: 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw') => {
+    if (!onUpdateRoomSection || !roomSections) return;
+
+    e.stopPropagation();
+
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const mouseX = (e.clientX - rect.left) / SCALE;
+    const mouseY = (e.clientY - rect.top) / SCALE;
+
+    const section = roomSections.find(s => s.id === sectionId);
+    if (!section) return;
+
+    if (edge) {
+      // Resizing
+      setResizingSectionId(sectionId);
+      setResizeEdge(edge);
+      setSectionDragStart({ x: mouseX, y: mouseY });
+    } else {
+      // Moving
+      setDraggingSectionId(sectionId);
+      setSectionDragStart({
+        x: mouseX - section.x,
+        y: mouseY - section.y,
+      });
+    }
+  };
+
+  const handleSectionMouseMove = (e: MouseEvent) => {
+    if (!onUpdateRoomSection || !roomSections) return;
+
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const mouseX = (e.clientX - rect.left) / SCALE;
+    const mouseY = (e.clientY - rect.top) / SCALE;
+
+    // Handle section dragging (move)
+    if (draggingSectionId && sectionDragStart) {
+      const section = roomSections.find(s => s.id === draggingSectionId);
+      if (!section) return;
+
+      let newX = mouseX - sectionDragStart.x;
+      let newY = mouseY - sectionDragStart.y;
+
+      // Snap to grid
+      newX = Math.round(newX * 2) / 2; // Snap to 0.5 ft grid
+      newY = Math.round(newY * 2) / 2;
+
+      // Snap to other sections
+      for (const otherSection of roomSections) {
+        if (otherSection.id === draggingSectionId) continue;
+
+        // Snap left edge to right edge
+        if (Math.abs(newX - (otherSection.x + otherSection.width)) < SNAP_THRESHOLD) {
+          newX = otherSection.x + otherSection.width;
+        }
+        // Snap right edge to left edge
+        if (Math.abs((newX + section.width) - otherSection.x) < SNAP_THRESHOLD) {
+          newX = otherSection.x - section.width;
+        }
+        // Snap top edge to bottom edge
+        if (Math.abs(newY - (otherSection.y + otherSection.height)) < SNAP_THRESHOLD) {
+          newY = otherSection.y + otherSection.height;
+        }
+        // Snap bottom edge to top edge
+        if (Math.abs((newY + section.height) - otherSection.y) < SNAP_THRESHOLD) {
+          newY = otherSection.y - section.height;
+        }
+      }
+
+      // Constrain to canvas bounds
+      newX = Math.max(0, Math.min(roomDimensions.width - section.width, newX));
+      newY = Math.max(0, Math.min(roomDimensions.height - section.height, newY));
+
+      onUpdateRoomSection(draggingSectionId, { x: newX, y: newY });
+    }
+
+    // Handle section resizing
+    if (resizingSectionId && resizeEdge && sectionDragStart) {
+      const section = roomSections.find(s => s.id === resizingSectionId);
+      if (!section) return;
+
+      const deltaX = mouseX - sectionDragStart.x;
+      const deltaY = mouseY - sectionDragStart.y;
+
+      let newX = section.x;
+      let newY = section.y;
+      let newWidth = section.width;
+      let newHeight = section.height;
+
+      // Apply resize based on edge
+      if (resizeEdge.includes('e')) {
+        newWidth = Math.max(4, section.width + deltaX); // Min 4ft
+      }
+      if (resizeEdge.includes('w')) {
+        const maxDelta = section.width - 4;
+        const constrainedDelta = Math.min(deltaX, maxDelta);
+        newX = section.x + constrainedDelta;
+        newWidth = section.width - constrainedDelta;
+      }
+      if (resizeEdge.includes('s')) {
+        newHeight = Math.max(4, section.height + deltaY); // Min 4ft
+      }
+      if (resizeEdge.includes('n')) {
+        const maxDelta = section.height - 4;
+        const constrainedDelta = Math.min(deltaY, maxDelta);
+        newY = section.y + constrainedDelta;
+        newHeight = section.height - constrainedDelta;
+      }
+
+      // Snap dimensions to 0.5ft grid
+      newWidth = Math.round(newWidth * 2) / 2;
+      newHeight = Math.round(newHeight * 2) / 2;
+      newX = Math.round(newX * 2) / 2;
+      newY = Math.round(newY * 2) / 2;
+
+      onUpdateRoomSection(resizingSectionId, {
+        x: newX,
+        y: newY,
+        width: newWidth,
+        height: newHeight,
+      });
+
+      setSectionDragStart({ x: mouseX, y: mouseY });
+    }
+  };
+
+  const handleSectionMouseUp = () => {
+    setDraggingSectionId(null);
+    setResizingSectionId(null);
+    setResizeEdge(null);
+    setSectionDragStart(null);
+  };
+
+  // Add section mouse event listeners
+  useEffect(() => {
+    if (draggingSectionId || resizingSectionId) {
+      window.addEventListener('mousemove', handleSectionMouseMove);
+      window.addEventListener('mouseup', handleSectionMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleSectionMouseMove);
+        window.removeEventListener('mouseup', handleSectionMouseUp);
+      };
+    }
+  }, [draggingSectionId, resizingSectionId, sectionDragStart, resizeEdge, roomSections]);
+
   return (
     <div className="flex items-center justify-center p-8 min-h-full">
       <div
@@ -157,23 +314,86 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
         {/* Room Sections or Single Room Background */}
         {roomSections && roomSections.length > 0 ? (
           // Multi-section rendering
-          roomSections.map((section, index) => (
-            <div
-              key={section.id}
-              className="absolute bg-white border border-gray-300"
-              style={{
-                left: section.x * SCALE,
-                top: section.y * SCALE,
-                width: section.width * SCALE,
-                height: section.height * SCALE,
-              }}
-            >
-              {/* Section label */}
-              <div className="absolute top-2 left-2 text-xs font-medium text-gray-400 select-none pointer-events-none">
-                {section.name || `Section ${index + 1}`}
+          roomSections.map((section, index) => {
+            const isHovered = hoveredSectionId === section.id;
+            const isDragging = draggingSectionId === section.id;
+            const isResizing = resizingSectionId === section.id;
+
+            return (
+              <div
+                key={section.id}
+                className={`absolute bg-white border-2 transition-all ${
+                  isHovered || isDragging || isResizing
+                    ? 'border-primary shadow-lg z-10'
+                    : 'border-gray-300'
+                } ${isDragging ? 'cursor-move opacity-70' : isResizing ? 'opacity-70' : ''}`}
+                style={{
+                  left: section.x * SCALE,
+                  top: section.y * SCALE,
+                  width: section.width * SCALE,
+                  height: section.height * SCALE,
+                }}
+                onMouseEnter={() => setHoveredSectionId(section.id)}
+                onMouseLeave={() => setHoveredSectionId(null)}
+              >
+                {/* Section label and drag handle */}
+                <div
+                  className="absolute top-2 left-2 px-2 py-1 bg-white/90 rounded text-xs font-medium text-gray-600 select-none cursor-move border border-gray-200 hover:bg-primary/10 hover:border-primary transition-colors"
+                  onMouseDown={(e) => handleSectionMouseDown(e, section.id)}
+                >
+                  {section.name || `Section ${index + 1}`}
+                </div>
+
+                {/* Resize handles - only show when hovered and not dragging */}
+                {onUpdateRoomSection && (isHovered || isResizing) && !isDragging && (
+                  <>
+                    {/* Corner handles */}
+                    <div
+                      className="absolute -top-1 -left-1 w-3 h-3 bg-primary rounded-full cursor-nw-resize border-2 border-white shadow-md"
+                      onMouseDown={(e) => handleSectionMouseDown(e, section.id, 'nw')}
+                    />
+                    <div
+                      className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full cursor-ne-resize border-2 border-white shadow-md"
+                      onMouseDown={(e) => handleSectionMouseDown(e, section.id, 'ne')}
+                    />
+                    <div
+                      className="absolute -bottom-1 -left-1 w-3 h-3 bg-primary rounded-full cursor-sw-resize border-2 border-white shadow-md"
+                      onMouseDown={(e) => handleSectionMouseDown(e, section.id, 'sw')}
+                    />
+                    <div
+                      className="absolute -bottom-1 -right-1 w-3 h-3 bg-primary rounded-full cursor-se-resize border-2 border-white shadow-md"
+                      onMouseDown={(e) => handleSectionMouseDown(e, section.id, 'se')}
+                    />
+
+                    {/* Edge handles */}
+                    <div
+                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-2 bg-primary rounded-full cursor-n-resize border-2 border-white shadow-md"
+                      onMouseDown={(e) => handleSectionMouseDown(e, section.id, 'n')}
+                    />
+                    <div
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-2 bg-primary rounded-full cursor-s-resize border-2 border-white shadow-md"
+                      onMouseDown={(e) => handleSectionMouseDown(e, section.id, 's')}
+                    />
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 -left-1 w-2 h-8 bg-primary rounded-full cursor-w-resize border-2 border-white shadow-md"
+                      onMouseDown={(e) => handleSectionMouseDown(e, section.id, 'w')}
+                    />
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 -right-1 w-2 h-8 bg-primary rounded-full cursor-e-resize border-2 border-white shadow-md"
+                      onMouseDown={(e) => handleSectionMouseDown(e, section.id, 'e')}
+                    />
+                  </>
+                )}
+
+                {/* Dimension display when hovering */}
+                {isHovered && !isDragging && !isResizing && (
+                  <div className="absolute bottom-2 right-2 px-2 py-1 bg-white/90 rounded text-xs font-medium text-gray-500 select-none pointer-events-none border border-gray-200">
+                    {section.width}' × {section.height}'
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           // Single room background
           <div className="absolute inset-0 bg-white" />
