@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import type { ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType, Design, User, FurnitureType, WallObjectType, RoomSection } from '../../types';
 import { FURNITURE_TYPES, WALL_OBJECT_TYPES } from '../../config/furnitureConfig';
+import type { LightingPreset } from '../../config/lightingPresets';
 import SectionManager from '../RoomSections/SectionManager';
+import LightingPresets from '../Lighting/LightingPresets';
 import * as LucideIcons from 'lucide-react';
 
 interface LeftSidebarProps {
@@ -13,6 +15,7 @@ interface LeftSidebarProps {
   onAddDoor: (door: Door) => void;
   onAddWindow: (window: WindowType) => void;
   onAddWallObject: (wallObject: WallObject) => void;
+  onApplyLightingPreset: (preset: LightingPreset) => void;
   designs: Design[];
   currentDesignId: string;
   onDesignSelect: (id: string) => void;
@@ -34,6 +37,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onAddDoor,
   onAddWindow,
   onAddWallObject,
+  onApplyLightingPreset,
   designs,
   currentDesignId,
   onDesignSelect,
@@ -255,6 +259,9 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       {!isCollapsed && <div className="flex-1 overflow-y-auto">
         {viewMode === 'room' ? (
           <>
+            {/* Lighting Presets */}
+            <LightingPresets onApplyPreset={onApplyLightingPreset} />
+
             {/* Search Bar */}
             <div className="p-4 border-b border-gray-100">
               <div className="relative">

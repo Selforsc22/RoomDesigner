@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import type { Design, ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType, RoomSection } from '../../types';
 import { designAPI } from '../../services/api';
+import type { LightingPreset } from '../../config/lightingPresets';
 import LeftSidebar from '../Sidebar/LeftSidebar';
 import PropertiesPanel from '../Sidebar/PropertiesPanel';
 import RoomCanvas from '../Canvas/RoomCanvas';
@@ -360,6 +361,30 @@ const MainLayout: React.FC = () => {
     setSelectedItemId(furniture.id);
   };
 
+  const handleApplyLightingPreset = (preset: LightingPreset) => {
+    if (!currentDesign) return;
+
+    // Remove all existing lights from the design
+    const nonLightFurniture = currentDesign.furniture.filter(item => !item.isLight);
+
+    // Add preset lights with unique IDs
+    const presetLights: FurnitureItem[] = preset.lights.map((light, index) => ({
+      ...light,
+      id: `${light.type}-${Date.now()}-${index}`,
+    }));
+
+    // Update design with non-light furniture plus preset lights
+    setCurrentDesign({
+      ...currentDesign,
+      furniture: [...nonLightFurniture, ...presetLights],
+    });
+
+    // Select the first light from the preset
+    if (presetLights.length > 0) {
+      setSelectedItemId(presetLights[0].id);
+    }
+  };
+
   const updateFurniture = (id: string, updates: Partial<FurnitureItem>) => {
     if (!currentDesign) return;
     setCurrentDesign({
@@ -463,6 +488,7 @@ const MainLayout: React.FC = () => {
         onAddDoor={addDoor}
         onAddWindow={addWindow}
         onAddWallObject={addWallObject}
+        onApplyLightingPreset={handleApplyLightingPreset}
         designs={designs}
         currentDesignId={currentDesign._id}
         onDesignSelect={(id) => {
