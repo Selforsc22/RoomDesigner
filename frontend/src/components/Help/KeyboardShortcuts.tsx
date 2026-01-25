@@ -9,6 +9,24 @@ interface KeyboardShortcutsProps {
 const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
+  // Define animations inline
+  const styles = `
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+  `;
+
   const shortcuts = [
     {
       category: 'General',
@@ -41,14 +59,19 @@ const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({ isOpen, onClose }
 
   return (
     <>
+      <style>{styles}</style>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
         onClick={onClose}
+        style={{ animation: 'fadeIn 0.2s ease-out' }}
       />
 
       {/* Dialog */}
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+      <div
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
+        style={{ animation: 'slideUp 0.3s ease-out' }}
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/5 to-primary/10">
           <div className="flex items-center gap-3">

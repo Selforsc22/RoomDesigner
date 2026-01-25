@@ -648,18 +648,19 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           return (
             <div
               key={item.id}
-              className={`absolute cursor-move flex flex-col items-center justify-center text-xs font-semibold rounded-md transition-all duration-150 ${
+              className={`absolute cursor-move flex flex-col items-center justify-center text-xs font-semibold rounded-md transition-all duration-200 ease-out ${
                 selectedItemId === item.id
-                  ? 'ring-2 ring-primary shadow-lg scale-105'
-                  : 'shadow-md hover:shadow-lg hover:scale-105'
-              } ${draggingItem === item.id ? 'cursor-grabbing' : 'cursor-grab'}`}
+                  ? 'ring-4 ring-primary ring-opacity-50 shadow-2xl scale-110 z-30'
+                  : 'shadow-md hover:shadow-xl hover:scale-105'
+              } ${draggingItem === item.id ? 'cursor-grabbing scale-110' : 'cursor-grab'}`}
               style={{
                 left: item.x * SCALE,
                 top: item.y * SCALE,
                 width: displayWidth,
                 height: displayHeight,
                 background: `linear-gradient(135deg, ${item.color} 0%, ${item.color}dd 100%)`,
-                opacity: draggingItem === item.id ? 0.6 : 1,
+                opacity: draggingItem === item.id ? 0.7 : 1,
+                transform: draggingItem === item.id ? 'rotate(2deg)' : 'rotate(0deg)',
               }}
               onMouseDown={(e) => handleMouseDown(e, item.id)}
               onMouseEnter={() => setHoveredItemId(item.id)}
@@ -735,7 +736,17 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                     stroke={lightColor}
                     strokeWidth="1"
                     strokeOpacity={intensity / 300}
-                  />
+                    style={{
+                      animation: 'pulse 3s ease-in-out infinite',
+                    }}
+                  >
+                    <animate
+                      attributeName="opacity"
+                      values={`${intensity / 400};${intensity / 350};${intensity / 400}`}
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                  </path>
 
                   {/* Light source indicator (small circle) */}
                   <circle
