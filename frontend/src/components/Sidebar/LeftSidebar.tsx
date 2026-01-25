@@ -47,6 +47,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['furniture']));
+  const [searchQuery, setSearchQuery] = useState('');
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const toggleCategory = (category: string) => {
@@ -59,8 +60,19 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
     setExpandedCategories(newExpanded);
   };
 
+  // Filter furniture by search query
+  const filteredFurniture = FURNITURE_TYPES.filter(item => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(query) ||
+      item.type.toLowerCase().includes(query) ||
+      (item.category && item.category.toLowerCase().includes(query))
+    );
+  });
+
   // Group furniture by category
-  const furnitureByCategory = FURNITURE_TYPES.reduce((acc, item) => {
+  const furnitureByCategory = filteredFurniture.reduce((acc, item) => {
     const category = item.category || 'furniture';
     if (!acc[category]) {
       acc[category] = [];
@@ -243,6 +255,36 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       {!isCollapsed && <div className="flex-1 overflow-y-auto">
         {viewMode === 'room' ? (
           <>
+            {/* Search Bar */}
+            <div className="p-4 border-b border-gray-100">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search equipment..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                />
+                {getIcon('Search')}
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  {getIcon('Search')}
+                </span>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {getIcon('X')}
+                  </button>
+                )}
+              </div>
+              {searchQuery && (
+                <p className="mt-2 text-xs text-gray-500">
+                  Found {filteredFurniture.length} item{filteredFurniture.length !== 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+
             {/* Furniture Library - Organized by Category */}
             <div className="border-b border-gray-100">
               {Object.entries(furnitureByCategory).map(([category, items]) => {

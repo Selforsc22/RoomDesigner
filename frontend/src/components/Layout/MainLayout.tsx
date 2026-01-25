@@ -6,8 +6,9 @@ import LeftSidebar from '../Sidebar/LeftSidebar';
 import PropertiesPanel from '../Sidebar/PropertiesPanel';
 import RoomCanvas from '../Canvas/RoomCanvas';
 import WallCanvas from '../Canvas/WallCanvas';
-import { ZoomIn, ZoomOut, Undo, Redo, ChevronDown } from 'lucide-react';
+import { ZoomIn, ZoomOut, Undo, Redo, ChevronDown, HelpCircle } from 'lucide-react';
 import { ROOM_TEMPLATES, instantiateTemplate, calculateBounds } from '../../config/roomTemplates';
+import KeyboardShortcuts from '../Help/KeyboardShortcuts';
 
 const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -23,6 +24,7 @@ const MainLayout: React.FC = () => {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('simple');
   const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 
   // Load designs on mount
   useEffect(() => {
@@ -245,6 +247,109 @@ const MainLayout: React.FC = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [currentDesign?.furniture, currentDesign?.wallObjects, currentDesign?.doors, currentDesign?.windows, currentDesign?.roomDimensions]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input field
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Ctrl/Cmd + Z: Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+
+      // Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y: Redo
+      if ((e.ctrlKey || e.metaKey) && (e.shiftKey && e.key === 'z' || e.key === 'y')) {
+        e.preventDefault();
+        handleRedo();
+      }
+
+      // Delete or Backspace: Delete selected item
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedItemId) {
+        e.preventDefault();
+        const selected = getSelectedItem();
+        if (!selected) return;
+        if (selected.type === 'furniture') {
+          deleteFurniture(selected.item.id);
+        } else if (selected.type === 'wallObject') {
+          deleteWallObject(selected.item.id);
+        }
+      }
+
+      // Ctrl/Cmd + D: Duplicate selected item
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && selectedItemId) {
+        e.preventDefault();
+        duplicateSelectedItem();
+      }
+
+      // Escape: Deselect
+      if (e.key === 'Escape') {
+        setSelectedItemId(null);
+      }
+
+      // G: Toggle grid
+      if (e.key === 'g' && viewMode === 'room') {
+        e.preventDefault();
+        setShowGrid(!showGrid);
+      }
+
+      // +/-: Zoom in/out
+      if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        handleZoomIn();
+      }
+      if (e.key === '-' || e.key === '_') {
+        e.preventDefault();
+        handleZoomOut();
+      }
+
+      // 0: Reset zoom
+      if (e.key === '0') {
+        e.preventDefault();
+        handleResetZoom();
+      }
+
+      // ?: Show keyboard shortcuts
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        setShowKeyboardShortcuts(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedItemId, currentDesign, historyIndex, history, showGrid, viewMode]);
+
+  const duplicateSelectedItem = () => {
+    if (!currentDesign || !selectedItemId) return;
+
+    const selected = getSelectedItem();
+    if (!selected) return;
+
+    if (selected.type === 'furniture') {
+      const original = selected.item as FurnitureItem;
+      const duplicate: FurnitureItem = {
+        ...original,
+        id: `${original.type}-${Date.now()}`,
+        x: original.x + 1, // Offset slightly
+        y: original.y + 1,
+        name: `${original.name} (Copy)`,
+      };
+      addFurniture(duplicate);
+    } else if (selected.type === 'wallObject') {
+      const original = selected.item as WallObject;
+      const duplicate: WallObject = {
+        ...original,
+        id: `${original.type}-${Date.now()}`,
+        x: original.x + 1,
+      };
+      addWallObject(duplicate);
+    }
+  };
 
   const addFurniture = (furniture: FurnitureItem) => {
     if (!currentDesign) return;
@@ -521,11 +626,51 @@ const MainLayout: React.FC = () => {
               </>
             )}
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-6">
+            {/* Room Measurements */}
+            {viewMode === 'room' && (
+              <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-500">Total Area</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {(currentDesign.roomDimensions.width * currentDesign.roomDimensions.height).toFixed(0)} sq ft
+                  </span>
+                </div>
+                <div className="h-8 w-px bg-gray-300" />
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-500">Items</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {currentDesign.furniture.length + currentDesign.doors.length + currentDesign.windows.length}
+                  </span>
+                </div>
+                {currentDesign.roomSections && currentDesign.roomSections.length > 0 && (
+                  <>
+                    <div className="h-8 w-px bg-gray-300" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">Sections</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {currentDesign.roomSections.length}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Help Button */}
+            <button
+              onClick={() => setShowKeyboardShortcuts(true)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Keyboard Shortcuts (?)"
+            >
+              <HelpCircle className="w-5 h-5 text-gray-600" />
+            </button>
+
+            {/* Save Status */}
             <span className="text-sm text-gray-600">
               {saveStatus === 'saving' && 'Saving...'}
-              {saveStatus === 'saved' && 'Saved'}
-              {saveStatus === 'error' && 'Error saving'}
+              {saveStatus === 'saved' && '✓ Saved'}
+              {saveStatus === 'error' && '⚠ Error saving'}
             </span>
           </div>
         </div>
@@ -589,6 +734,12 @@ const MainLayout: React.FC = () => {
             deleteWallObject(selected.item.id);
           }
         }}
+      />
+
+      {/* Keyboard Shortcuts Dialog */}
+      <KeyboardShortcuts
+        isOpen={showKeyboardShortcuts}
+        onClose={() => setShowKeyboardShortcuts(false)}
       />
     </div>
   );
