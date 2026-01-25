@@ -774,6 +774,64 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
               );
             })}
         </svg>
+
+        {/* Ambient Light Color Overlay */}
+        {(() => {
+          const activeLights = furniture.filter(
+            (item) => item.isLight && item.lightIntensity && item.lightIntensity > 0
+          );
+
+          if (activeLights.length === 0) return null;
+
+          // Calculate average color temperature weighted by intensity
+          let totalWeightedTemp = 0;
+          let totalWeight = 0;
+
+          activeLights.forEach((light) => {
+            const intensity = light.lightIntensity || 80;
+            const colorTemp = light.colorTemperature || 5600;
+            totalWeightedTemp += colorTemp * intensity;
+            totalWeight += intensity;
+          });
+
+          const avgTemp = totalWeightedTemp / totalWeight;
+
+          // Determine overlay color based on average temperature
+          let overlayColor = '';
+          let overlayOpacity = 0;
+
+          if (avgTemp < 3800) {
+            overlayColor = '#FF8C00'; // Deep orange for very warm
+            overlayOpacity = 0.08;
+          } else if (avgTemp < 4500) {
+            overlayColor = '#FFB84D'; // Orange for warm
+            overlayOpacity = 0.06;
+          } else if (avgTemp < 5200) {
+            overlayColor = '#FFF4E6'; // Warm white
+            overlayOpacity = 0.04;
+          } else if (avgTemp < 6000) {
+            overlayColor = '#FFFFFF'; // Neutral
+            overlayOpacity = 0.02;
+          } else if (avgTemp < 6500) {
+            overlayColor = '#E6F3FF'; // Cool white
+            overlayOpacity = 0.04;
+          } else {
+            overlayColor = '#B3D9FF'; // Blue for very cool
+            overlayOpacity = 0.06;
+          }
+
+          return (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundColor: overlayColor,
+                opacity: overlayOpacity,
+                mixBlendMode: 'multiply',
+                zIndex: 10,
+              }}
+            />
+          );
+        })()}
       </div>
     </div>
   );
