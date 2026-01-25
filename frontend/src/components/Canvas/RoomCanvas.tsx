@@ -645,6 +645,135 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           const displayHeight = isRotated ? item.width * SCALE : item.height * SCALE;
           const isHovered = hoveredItemId === item.id;
 
+          // Special rendering for lights
+          if (item.isLight) {
+            const direction = item.lightDirection || 0;
+            const intensity = item.lightIntensity || 80;
+            const colorTemp = item.colorTemperature || 5600;
+
+            // Calculate color based on temperature
+            const getLightColor = (temp: number) => {
+              if (temp < 4000) return '#FFB84D'; // Warm orange
+              if (temp < 5000) return '#FFF4E6'; // Warm white
+              if (temp < 6000) return '#FFFFFF'; // Neutral white
+              return '#E6F3FF'; // Cool blue-white
+            };
+
+            const lightColor = getLightColor(colorTemp);
+
+            return (
+              <div
+                key={item.id}
+                className={`absolute cursor-move transition-all duration-200 ease-out ${
+                  selectedItemId === item.id
+                    ? 'z-30'
+                    : ''
+                } ${draggingItem === item.id ? 'cursor-grabbing' : 'cursor-grab'}`}
+                style={{
+                  left: item.x * SCALE,
+                  top: item.y * SCALE,
+                  width: displayWidth,
+                  height: displayHeight,
+                  opacity: draggingItem === item.id ? 0.7 : 1,
+                }}
+                onMouseDown={(e) => handleMouseDown(e, item.id)}
+                onMouseEnter={() => setHoveredItemId(item.id)}
+                onMouseLeave={() => setHoveredItemId(null)}
+                title={`${item.name} - ${item.lightIntensity}% @ ${item.colorTemperature}K`}
+              >
+                <svg
+                  width={displayWidth}
+                  height={displayHeight}
+                  viewBox="0 0 100 100"
+                  className="pointer-events-none"
+                  style={{
+                    filter: selectedItemId === item.id
+                      ? `drop-shadow(0 0 ${intensity / 5}px ${lightColor})`
+                      : `drop-shadow(0 0 ${intensity / 10}px ${lightColor})`
+                  }}
+                >
+                  {/* Radial gradient glow */}
+                  <defs>
+                    <radialGradient id={`glow-${item.id}`} cx="50%" cy="50%">
+                      <stop offset="0%" stopColor={lightColor} stopOpacity={intensity / 100} />
+                      <stop offset="50%" stopColor={lightColor} stopOpacity={intensity / 200} />
+                      <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
+                    </radialGradient>
+                  </defs>
+
+                  {/* Glow circle */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill={`url(#glow-${item.id})`}
+                    opacity="0.6"
+                  />
+
+                  {/* Light fixture icon - rotates based on direction */}
+                  <g transform={`rotate(${direction} 50 50)`}>
+                    {/* Light body */}
+                    <rect
+                      x="35"
+                      y="30"
+                      width="30"
+                      height="20"
+                      rx="3"
+                      fill={item.color}
+                      stroke={lightColor}
+                      strokeWidth="2"
+                    />
+
+                    {/* Direction arrow */}
+                    <path
+                      d="M 50 50 L 50 75 M 45 70 L 50 75 L 55 70"
+                      stroke={lightColor}
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
+
+                    {/* Light indicator on fixture */}
+                    <circle
+                      cx="50"
+                      cy="40"
+                      r="4"
+                      fill={lightColor}
+                      opacity="0.9"
+                    >
+                      <animate
+                        attributeName="opacity"
+                        values="0.5;1;0.5"
+                        dur="2s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  </g>
+
+                  {/* Selection ring */}
+                  {selectedItemId === item.id && (
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="48"
+                      fill="none"
+                      stroke="#3B82F6"
+                      strokeWidth="3"
+                      opacity="0.8"
+                    />
+                  )}
+                </svg>
+
+                {/* Label */}
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap bg-white/90 px-2 py-0.5 rounded shadow-sm pointer-events-none">
+                  {item.name}
+                </div>
+              </div>
+            );
+          }
+
+          // Regular furniture rendering
           return (
             <div
               key={item.id}

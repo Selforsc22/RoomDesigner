@@ -20,6 +20,7 @@ interface LeftSidebarProps {
   currentDesignId: string;
   onDesignSelect: (id: string) => void;
   onNewDesign: () => void;
+  onDeleteDesign: (id: string) => void;
   user: User | null;
   onLogout: () => void;
   roomSections?: RoomSection[];
@@ -42,6 +43,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   currentDesignId,
   onDesignSelect,
   onNewDesign,
+  onDeleteDesign,
   user,
   onLogout,
   roomSections,
@@ -434,17 +436,37 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           </div>
           <div className="space-y-1 max-h-48 overflow-y-auto">
             {designs.map((design) => (
-              <button
+              <div
                 key={design._id}
-                onClick={() => onDesignSelect(design._id)}
-                className={`w-full text-left px-3 py-2 text-sm rounded ${
+                className={`flex items-center gap-2 px-3 py-2 text-sm rounded group ${
                   currentDesignId === design._id
                     ? 'bg-primary text-white'
                     : 'hover:bg-gray-100'
                 }`}
               >
-                {design.name}
-              </button>
+                <button
+                  onClick={() => onDesignSelect(design._id)}
+                  className="flex-1 text-left"
+                >
+                  {design.name}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Delete "${design.name}"?`)) {
+                      onDeleteDesign(design._id);
+                    }
+                  }}
+                  className={`opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 transition-all ${
+                    currentDesignId === design._id
+                      ? 'text-white hover:text-red-600'
+                      : 'text-gray-500 hover:text-red-600'
+                  }`}
+                  title="Delete design"
+                >
+                  <LucideIcons.Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             ))}
           </div>
         </div>

@@ -81,6 +81,27 @@ const MainLayout: React.FC = () => {
     }
   };
 
+  const deleteDesign = async (id: string) => {
+    try {
+      await designAPI.delete(id);
+      const updatedDesigns = designs.filter(d => d._id !== id);
+      setDesigns(updatedDesigns);
+
+      // If we deleted the current design, switch to another one
+      if (currentDesign?._id === id) {
+        if (updatedDesigns.length > 0) {
+          setCurrentDesign(updatedDesigns[0]);
+        } else {
+          // Create a new design if we deleted the last one
+          createNewDesign();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to delete design:', error);
+      alert('Failed to delete design. Please try again.');
+    }
+  };
+
   const saveDesign = async () => {
     if (!currentDesign) return;
 
@@ -521,6 +542,7 @@ const MainLayout: React.FC = () => {
           if (design) setCurrentDesign(design);
         }}
         onNewDesign={createNewDesign}
+        onDeleteDesign={deleteDesign}
         user={user}
         onLogout={logout}
         roomSections={currentDesign.roomSections}
