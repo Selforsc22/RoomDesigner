@@ -457,7 +457,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                       onDeleteDesign(design._id);
                     }
                   }}
-                  className={`opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 transition-all ${
+                  className={`p-1 rounded hover:bg-red-100 transition-all ${
                     currentDesignId === design._id
                       ? 'text-white hover:text-red-600'
                       : 'text-gray-500 hover:text-red-600'

@@ -685,33 +685,42 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                   width={displayWidth}
                   height={displayHeight}
                   viewBox="0 0 100 100"
-                  className="pointer-events-none"
+                  className="pointer-events-none overflow-visible"
                   style={{
                     filter: selectedItemId === item.id
                       ? `drop-shadow(0 0 ${intensity / 5}px ${lightColor})`
                       : `drop-shadow(0 0 ${intensity / 10}px ${lightColor})`
                   }}
                 >
-                  {/* Radial gradient glow */}
+                  {/* Directional gradient glow */}
                   <defs>
-                    <radialGradient id={`glow-${item.id}`} cx="50%" cy="50%">
-                      <stop offset="0%" stopColor={lightColor} stopOpacity={intensity / 100} />
-                      <stop offset="50%" stopColor={lightColor} stopOpacity={intensity / 200} />
+                    <linearGradient id={`beam-gradient-${item.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor={lightColor} stopOpacity={intensity / 150} />
+                      <stop offset="30%" stopColor={lightColor} stopOpacity={intensity / 250} />
                       <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
-                    </radialGradient>
+                    </linearGradient>
                   </defs>
 
-                  {/* Glow circle */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    fill={`url(#glow-${item.id})`}
-                    opacity="0.6"
-                  />
-
-                  {/* Light fixture icon - rotates based on direction */}
+                  {/* Rotated group containing both fixture and projected glow */}
                   <g transform={`rotate(${direction} 50 50)`}>
+                    {/* Projected gradient glow beam - emanates from fixture */}
+                    <path
+                      d={`M 35 50 L 20 ${50 + 60} L 80 ${50 + 60} L 65 50 Z`}
+                      fill={`url(#beam-gradient-${item.id})`}
+                      opacity="0.8"
+                    />
+
+                    {/* Additional wider glow for softer effect */}
+                    <ellipse
+                      cx="50"
+                      cy="80"
+                      rx="40"
+                      ry="25"
+                      fill={lightColor}
+                      opacity={intensity / 800}
+                    />
+
+                    {/* Light fixture icon */}
                     {/* Light body */}
                     <rect
                       x="35"
@@ -734,7 +743,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                       fill="none"
                     />
 
-                    {/* Light indicator on fixture */}
+                    {/* Light indicator on fixture - pulsing */}
                     <circle
                       cx="50"
                       cy="40"
