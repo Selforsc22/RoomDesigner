@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import type { Design, ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType, RoomSection } from '../../types';
 import { designAPI } from '../../services/api';
@@ -7,9 +7,10 @@ import LeftSidebar from '../Sidebar/LeftSidebar';
 import PropertiesPanel from '../Sidebar/PropertiesPanel';
 import RoomCanvas from '../Canvas/RoomCanvas';
 import WallCanvas from '../Canvas/WallCanvas';
-import { ZoomIn, ZoomOut, Undo, Redo, ChevronDown, HelpCircle } from 'lucide-react';
+import { ZoomIn, ZoomOut, Undo, Redo, ChevronDown, HelpCircle, Download } from 'lucide-react';
 import { ROOM_TEMPLATES, instantiateTemplate, calculateBounds } from '../../config/roomTemplates';
 import KeyboardShortcuts from '../Help/KeyboardShortcuts';
+import ExportDialog from '../Export/ExportDialog';
 
 const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -26,6 +27,8 @@ const MainLayout: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('simple');
   const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   // Load designs on mount
   useEffect(() => {
@@ -385,6 +388,28 @@ const MainLayout: React.FC = () => {
     }
   };
 
+  const handleExport = async (format: 'png' | 'jpeg', quality: number) => {
+    if (!canvasContainerRef.current || !currentDesign) return;
+
+    try {
+      // Dynamically import html-to-image
+      const htmlToImage = await import('html-to-image');
+
+      const dataUrl = format === 'png'
+        ? await htmlToImage.toPng(canvasContainerRef.current, { quality: 1.0, pixelRatio: 2 })
+        : await htmlToImage.toJpeg(canvasContainerRef.current, { quality, pixelRatio: 2 });
+
+      // Create download link
+      const link = document.createElement('a');
+      link.download = `${currentDesign.name || 'room-design'}.${format}`;
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export failed. Please try again.');
+    }
+  };
+
   const updateFurniture = (id: string, updates: Partial<FurnitureItem>) => {
     if (!currentDesign) return;
     setCurrentDesign({
@@ -685,6 +710,15 @@ const MainLayout: React.FC = () => {
               </div>
             )}
 
+            {/* Export Button */}
+            <button
+              onClick={() => setShowExportDialog(true)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Export Design"
+            >
+              <Download className="w-5 h-5 text-gray-600" />
+            </button>
+
             {/* Help Button */}
             <button
               onClick={() => setShowKeyboardShortcuts(true)}
@@ -704,7 +738,7 @@ const MainLayout: React.FC = () => {
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-gray-100">
+        <div ref={canvasContainerRef} className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-gray-100">
           {viewMode === 'room' ? (
             <RoomCanvas
               roomDimensions={currentDesign.roomDimensions}
@@ -768,6 +802,14 @@ const MainLayout: React.FC = () => {
       <KeyboardShortcuts
         isOpen={showKeyboardShortcuts}
         onClose={() => setShowKeyboardShortcuts(false)}
+      />
+
+      {/* Export Dialog */}
+      <ExportDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        onExport={handleExport}
+        designName={currentDesign?.name || 'room-design'}
       />
     </div>
   );
