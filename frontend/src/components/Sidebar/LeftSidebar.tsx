@@ -316,6 +316,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                             key={furnitureType.type}
                             onClick={() => handleAddFurniture(furnitureType)}
                             className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
+                            title={`Add ${furnitureType.name} (${furnitureType.width}' × ${furnitureType.height}'${furnitureType.isLight ? ' - Light source' : ''})`}
                           >
                             <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                               {getIcon(furnitureType.icon)}
@@ -337,6 +338,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 <button
                   onClick={handleAddDoor}
                   className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
+                  title="Add Door (3' wide)"
                 >
                   <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                     {getIcon('DoorOpen')}
@@ -346,6 +348,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 <button
                   onClick={handleAddWindow}
                   className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
+                  title="Add Window (4' × 3')"
                 >
                   <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                     {getIcon('RectangleHorizontal')}
@@ -398,6 +401,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                     key={wallObjectType.type}
                     onClick={() => handleAddWallObject(wallObjectType)}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
+                    title={`Add ${wallObjectType.name} (${wallObjectType.width}' × ${wallObjectType.height}')`}
                   >
                     <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                       {getIcon(wallObjectType.icon)}

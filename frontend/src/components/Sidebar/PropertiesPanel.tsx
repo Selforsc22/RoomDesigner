@@ -125,7 +125,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Dimensions */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" title="Width of the item in feet">
                 Width (ft)
               </label>
               <input
@@ -135,10 +135,11 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 value={item.width || 0}
                 onChange={(e) => onUpdate({ width: parseFloat(e.target.value) })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                title={`Set width to ${item.width || 0} feet`}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" title="Height of the item in feet">
                 Height (ft)
               </label>
               <input
@@ -148,6 +149,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 value={item.height || 0}
                 onChange={(e) => onUpdate({ height: parseFloat(e.target.value) })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                title={`Set height to ${item.height || 0} feet`}
               />
             </div>
           </div>
@@ -155,7 +157,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Position */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" title="Horizontal position from left edge of room">
                 X Position
               </label>
               <input
@@ -164,10 +166,11 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 value={item.x?.toFixed(1) || 0}
                 onChange={(e) => onUpdate({ x: parseFloat(e.target.value) })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                title={`Horizontal position: ${item.x?.toFixed(1) || 0} feet from left`}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" title="Vertical position from top edge of room">
                 Y Position
               </label>
               <input
@@ -176,6 +179,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 value={item.y?.toFixed(1) || 0}
                 onChange={(e) => onUpdate({ y: parseFloat(e.target.value) })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                title={`Vertical position: ${item.y?.toFixed(1) || 0} feet from top`}
               />
             </div>
           </div>
@@ -183,7 +187,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Color (for furniture) */}
           {type === 'furniture' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" title="Click to choose a color for this item">
                 Color
               </label>
               <div className="flex items-center space-x-2">
@@ -192,6 +196,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   value={item.color || '#8B7355'}
                   onChange={(e) => onUpdate({ color: e.target.value })}
                   className="h-10 w-full rounded border border-gray-300"
+                  title={`Current color: ${item.color || '#8B7355'}`}
                 />
               </div>
             </div>
@@ -206,6 +211,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               <button
                 onClick={handleRotate}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                title="Rotate item by 90 degrees clockwise"
               >
                 <LucideIcons.RotateCw className="w-4 h-4" />
                 Rotate 90° (Current: {item.rotation || 0}°)
@@ -218,7 +224,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             <>
               {/* Light Intensity */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" title="Adjust brightness of the light (0% = off, 100% = maximum)">
                   Light Intensity
                 </label>
                 <div className="space-y-2">
@@ -229,6 +235,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     value={item.lightIntensity || 80}
                     onChange={(e) => onUpdate({ lightIntensity: parseInt(e.target.value) })}
                     className="w-full"
+                    title={`Set light brightness to ${item.lightIntensity || 80}%`}
                   />
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>0%</span>
@@ -240,7 +247,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
               {/* Color Temperature */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" title="Adjust the warmth/coolness of the light (3200K = warm tungsten, 5600K = daylight, 6500K = cool blue)">
                   Color Temperature
                 </label>
                 <div className="space-y-2">
@@ -252,6 +259,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     value={item.colorTemperature || 5600}
                     onChange={(e) => onUpdate({ colorTemperature: parseInt(e.target.value) })}
                     className="w-full"
+                    title={`Set color temperature to ${item.colorTemperature || 5600}K`}
                   />
                   <div className="flex justify-between text-xs">
                     <span className="text-orange-600">Warm</span>
@@ -263,7 +271,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
               {/* Beam Angle */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" title="Adjust the spread of the light (15° = narrow spot, 120° = wide flood)">
                   Beam Angle
                 </label>
                 <div className="space-y-2">
@@ -275,6 +283,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     value={item.beamAngle || 60}
                     onChange={(e) => onUpdate({ beamAngle: parseInt(e.target.value) })}
                     className="w-full"
+                    title={`Set beam angle to ${item.beamAngle || 60}°`}
                   />
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Spot</span>
@@ -286,7 +295,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
               {/* Height off Ground */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" title="Set the vertical position of the light above the floor">
                   Height (ft)
                 </label>
                 <input
@@ -297,13 +306,14 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   value={item.zHeight || 6}
                   onChange={(e) => onUpdate({ zHeight: parseFloat(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                  title={`Light is positioned ${item.zHeight || 6} feet above the floor`}
                 />
                 <p className="mt-1 text-xs text-gray-500">Height above floor</p>
               </div>
 
               {/* Light Direction */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" title="Adjust which direction the light is pointing (0° = right, 90° = down, 180° = left, 270° = up)">
                   Light Direction
                 </label>
                 <div className="space-y-2">
@@ -315,6 +325,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     value={item.lightDirection || 0}
                     onChange={(e) => onUpdate({ lightDirection: parseInt(e.target.value) })}
                     className="w-full"
+                    title={`Light pointing at ${item.lightDirection || 0}° angle`}
                   />
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>0°</span>

@@ -549,6 +549,7 @@ const MainLayout: React.FC = () => {
                       )
                     }
                     className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                    title="Set room width (8-100 feet)"
                   />
                   <span className="text-sm text-gray-500">ft</span>
                 </div>
@@ -567,13 +568,14 @@ const MainLayout: React.FC = () => {
                       )
                     }
                     className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                    title="Set room height (8-100 feet)"
                   />
                   <span className="text-sm text-gray-500">ft</span>
                 </div>
                   </>
                 )}
 
-                <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors" title="Toggle grid overlay for precise positioning (G)">
                   <input
                     type="checkbox"
                     checked={showGrid}
