@@ -329,10 +329,14 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
             const isDragging = draggingSectionId === section.id;
             const isResizing = resizingSectionId === section.id;
 
+            // Cycle through subtle background colors for visual distinction
+            const bgColors = ['bg-blue-50/30', 'bg-green-50/30', 'bg-purple-50/30', 'bg-amber-50/30', 'bg-rose-50/30'];
+            const bgColor = bgColors[index % bgColors.length];
+
             return (
               <div
                 key={section.id}
-                className={`absolute bg-white border-2 transition-all ${
+                className={`absolute ${bgColor} border-2 transition-all ${
                   isHovered || isDragging || isResizing
                     ? 'border-primary shadow-lg z-10'
                     : 'border-gray-300'
@@ -348,10 +352,17 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
               >
                 {/* Section label and drag handle */}
                 <div
-                  className="absolute top-2 left-2 px-2 py-1 bg-white/90 rounded text-xs font-medium text-gray-600 select-none cursor-move border border-gray-200 hover:bg-primary/10 hover:border-primary transition-colors"
+                  className="absolute top-2 left-2 select-none"
                   onMouseDown={(e) => handleSectionMouseDown(e, section.id)}
                 >
-                  {section.name || `Section ${index + 1}`}
+                  <div className="px-3 py-1.5 bg-gradient-to-br from-primary/90 to-primary rounded-lg cursor-move border-2 border-white shadow-lg hover:shadow-xl transition-all">
+                    <div className="text-sm font-bold text-white">
+                      {section.name || `Section ${index + 1}`}
+                    </div>
+                    <div className="text-[10px] text-white/90 mt-0.5">
+                      {section.width}' × {section.height}' ({(section.width * section.height).toFixed(0)} sq ft)
+                    </div>
+                  </div>
                 </div>
 
                 {/* Resize handles - only show when hovered and not dragging */}
@@ -407,6 +418,72 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
         ) : (
           // Single room background
           <div className="absolute inset-0 bg-white" />
+        )}
+
+        {/* Section Connection Indicators */}
+        {roomSections && roomSections.length > 1 && (
+          <svg
+            className="absolute inset-0 pointer-events-none z-5"
+            width={canvasWidth}
+            height={canvasHeight}
+          >
+            {roomSections.map((section1, idx1) =>
+              roomSections.slice(idx1 + 1).map((section2) => {
+                // Check if sections are adjacent (share an edge)
+                const isHorizontallyAdjacent =
+                  (section1.x + section1.width === section2.x || section2.x + section2.width === section1.x) &&
+                  !(section1.y + section1.height <= section2.y || section2.y + section2.height <= section1.y);
+
+                const isVerticallyAdjacent =
+                  (section1.y + section1.height === section2.y || section2.y + section2.height === section1.y) &&
+                  !(section1.x + section1.width <= section2.x || section2.x + section2.width <= section1.x);
+
+                if (!isHorizontallyAdjacent && !isVerticallyAdjacent) return null;
+
+                // Calculate connection point
+                let x1, y1, x2, y2;
+                if (isHorizontallyAdjacent) {
+                  // Vertical connection line
+                  const sharedX = section1.x + section1.width === section2.x ? section1.x + section1.width : section2.x + section2.width;
+                  const overlapTop = Math.max(section1.y, section2.y);
+                  const overlapBottom = Math.min(section1.y + section1.height, section2.y + section2.height);
+                  const midY = (overlapTop + overlapBottom) / 2;
+
+                  x1 = sharedX * SCALE;
+                  y1 = midY * SCALE - 20;
+                  x2 = sharedX * SCALE;
+                  y2 = midY * SCALE + 20;
+                } else {
+                  // Horizontal connection line
+                  const sharedY = section1.y + section1.height === section2.y ? section1.y + section1.height : section2.y + section2.height;
+                  const overlapLeft = Math.max(section1.x, section2.x);
+                  const overlapRight = Math.min(section1.x + section1.width, section2.x + section2.width);
+                  const midX = (overlapLeft + overlapRight) / 2;
+
+                  x1 = midX * SCALE - 20;
+                  y1 = sharedY * SCALE;
+                  x2 = midX * SCALE + 20;
+                  y2 = sharedY * SCALE;
+                }
+
+                return (
+                  <g key={`connection-${section1.id}-${section2.id}`}>
+                    <line
+                      x1={x1}
+                      y1={y1}
+                      x2={x2}
+                      y2={y2}
+                      stroke="#10B981"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      opacity="0.6"
+                    />
+                    <circle cx={(x1 + x2) / 2} cy={(y1 + y2) / 2} r="4" fill="#10B981" opacity="0.8" />
+                  </g>
+                );
+              })
+            )}
+          </svg>
         )}
 
         {/* Snap Alignment Guides */}
