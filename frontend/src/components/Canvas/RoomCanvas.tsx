@@ -650,6 +650,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
             const direction = item.lightDirection || 0;
             const intensity = item.lightIntensity || 80;
             const colorTemp = item.colorTemperature || 5600;
+            const beamAngle = item.beamAngle || 60;
 
             // Calculate color based on temperature
             const getLightColor = (temp: number) => {
@@ -660,6 +661,10 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
             };
 
             const lightColor = getLightColor(colorTemp);
+
+            // Calculate beam projection - extends far beyond the fixture like real lighting diagrams
+            const beamLength = 400; // Extended beam length
+            const beamWidth = beamAngle * 2; // Width based on beam angle
 
             return (
               <div
@@ -681,46 +686,55 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                 onMouseLeave={() => setHoveredItemId(null)}
                 title={`${item.name} - ${item.lightIntensity}% @ ${item.colorTemperature}K`}
               >
+                {/* Extended SVG for light beam projection - renders BEHIND the fixture */}
                 <svg
-                  width={displayWidth}
-                  height={displayHeight}
-                  viewBox="0 0 100 100"
-                  className="pointer-events-none overflow-visible"
+                  width={displayWidth * 8}
+                  height={displayHeight * 8}
+                  viewBox="-300 -300 600 600"
+                  className="pointer-events-none absolute"
                   style={{
-                    filter: selectedItemId === item.id
-                      ? `drop-shadow(0 0 ${intensity / 5}px ${lightColor})`
-                      : `drop-shadow(0 0 ${intensity / 10}px ${lightColor})`
+                    left: '50%',
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    overflow: 'visible',
+                    zIndex: 0,
                   }}
                 >
                   {/* Directional gradient glow */}
                   <defs>
                     <linearGradient id={`beam-gradient-${item.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor={lightColor} stopOpacity={intensity / 150} />
-                      <stop offset="30%" stopColor={lightColor} stopOpacity={intensity / 250} />
+                      <stop offset="0%" stopColor={lightColor} stopOpacity={intensity / 300} />
+                      <stop offset="50%" stopColor={lightColor} stopOpacity={intensity / 500} />
                       <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
                     </linearGradient>
                   </defs>
 
-                  {/* Rotated group containing both fixture and projected glow */}
-                  <g transform={`rotate(${direction} 50 50)`}>
-                    {/* Projected gradient glow beam - emanates from fixture */}
+                  {/* Rotated group containing projected glow - extends far from origin */}
+                  <g transform={`rotate(${direction} 0 0)`}>
+                    {/* Projected gradient glow beam - large cone extending from fixture */}
                     <path
-                      d={`M 35 50 L 20 ${50 + 60} L 80 ${50 + 60} L 65 50 Z`}
+                      d={`M -20 0 L ${-beamWidth} ${beamLength} L ${beamWidth} ${beamLength} L 20 0 Z`}
                       fill={`url(#beam-gradient-${item.id})`}
-                      opacity="0.8"
+                      opacity="0.6"
                     />
+                  </g>
+                </svg>
 
-                    {/* Additional wider glow for softer effect */}
-                    <ellipse
-                      cx="50"
-                      cy="80"
-                      rx="40"
-                      ry="25"
-                      fill={lightColor}
-                      opacity={intensity / 800}
-                    />
-
-                    {/* Light fixture icon */}
+                {/* Light fixture icon - renders on TOP */}
+                <svg
+                  width={displayWidth}
+                  height={displayHeight}
+                  viewBox="0 0 100 100"
+                  className="pointer-events-none relative"
+                  style={{
+                    filter: selectedItemId === item.id
+                      ? `drop-shadow(0 0 ${intensity / 5}px ${lightColor})`
+                      : `drop-shadow(0 0 ${intensity / 10}px ${lightColor})`,
+                    zIndex: 10,
+                  }}
+                >
+                  {/* Rotated fixture icon */}
+                  <g transform={`rotate(${direction} 50 50)`}>
                     {/* Light body */}
                     <rect
                       x="35"
@@ -775,7 +789,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                 </svg>
 
                 {/* Label */}
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap bg-white/90 px-2 py-0.5 rounded shadow-sm pointer-events-none">
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap bg-white/90 px-2 py-0.5 rounded shadow-sm pointer-events-none z-20">
                   {item.name}
                 </div>
               </div>
