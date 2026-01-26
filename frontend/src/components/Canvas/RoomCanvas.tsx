@@ -666,8 +666,8 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                 key={item.id}
                 className={`absolute cursor-move transition-all duration-200 ease-out ${
                   selectedItemId === item.id
-                    ? 'z-30'
-                    : 'z-10'
+                    ? 'z-[35]'
+                    : 'z-[25]'
                 } ${draggingItem === item.id ? 'cursor-grabbing' : 'cursor-grab'}`}
                 style={{
                   left: item.x * SCALE,
@@ -791,12 +791,12 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           );
         })}
 
-        {/* Light Beam Visualization - Renders above background */}
+        {/* Light Beam Visualization - Renders above background, below fixtures */}
         <svg
           className="absolute inset-0 pointer-events-none"
           width={canvasWidth}
           height={canvasHeight}
-          style={{ zIndex: 5 }}
+          style={{ zIndex: 15 }}
         >
           <defs>
             {furniture
@@ -831,9 +831,9 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                     y2={beamEndY}
                     gradientUnits="userSpaceOnUse"
                   >
-                    <stop offset="0%" stopColor={lightColor} stopOpacity={intensity / 200} />
-                    <stop offset="30%" stopColor={lightColor} stopOpacity={intensity / 300} />
-                    <stop offset="70%" stopColor={lightColor} stopOpacity={intensity / 600} />
+                    <stop offset="0%" stopColor={lightColor} stopOpacity={intensity / 100} />
+                    <stop offset="40%" stopColor={lightColor} stopOpacity={intensity / 150} />
+                    <stop offset="80%" stopColor={lightColor} stopOpacity={intensity / 400} />
                     <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
                   </linearGradient>
                 );
@@ -868,19 +868,11 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
 
               return (
                 <g key={`light-${light.id}`}>
-                  {/* Light beam cone with gradient */}
+                  {/* Light beam cone with gradient - static, no animation */}
                   <path
                     d={pathData}
                     fill={`url(#light-gradient-${light.id})`}
-                    opacity="0.8"
-                  >
-                    <animate
-                      attributeName="opacity"
-                      values="0.7;0.9;0.7"
-                      dur="3s"
-                      repeatCount="indefinite"
-                    />
-                  </path>
+                  />
                 </g>
               );
             })}
