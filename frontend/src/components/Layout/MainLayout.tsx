@@ -7,7 +7,7 @@ import LeftSidebar from '../Sidebar/LeftSidebar';
 import PropertiesPanel from '../Sidebar/PropertiesPanel';
 import RoomCanvas from '../Canvas/RoomCanvas';
 import WallCanvas from '../Canvas/WallCanvas';
-import { ZoomIn, ZoomOut, Undo, Redo, ChevronDown, HelpCircle, Download } from 'lucide-react';
+import { ZoomIn, ZoomOut, Undo, Redo, ChevronDown, HelpCircle, Download, Trash2 } from 'lucide-react';
 import { ROOM_TEMPLATES, instantiateTemplate, calculateBounds } from '../../config/roomTemplates';
 import KeyboardShortcuts from '../Help/KeyboardShortcuts';
 import ExportDialog from '../Export/ExportDialog';
@@ -28,6 +28,7 @@ const MainLayout: React.FC = () => {
   const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   // Load designs on mount
@@ -431,6 +432,12 @@ const MainLayout: React.FC = () => {
     }
   };
 
+  const handleDeleteCurrentDesign = async () => {
+    if (!currentDesign) return;
+    await deleteDesign(currentDesign._id);
+    setShowDeleteDialog(false);
+  };
+
   const updateFurniture = (id: string, updates: Partial<FurnitureItem>) => {
     if (!currentDesign) return;
     setCurrentDesign({
@@ -741,6 +748,15 @@ const MainLayout: React.FC = () => {
               <Download className="w-5 h-5 text-gray-600" />
             </button>
 
+            {/* Delete Button */}
+            <button
+              onClick={() => setShowDeleteDialog(true)}
+              className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete Current Design"
+            >
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </button>
+
             {/* Help Button */}
             <button
               onClick={() => setShowKeyboardShortcuts(true)}
@@ -833,6 +849,44 @@ const MainLayout: React.FC = () => {
         onExport={handleExport}
         designName={currentDesign?.name || 'room-design'}
       />
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+            onClick={() => setShowDeleteDialog(false)}
+          />
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Design</h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Are you sure you want to delete <span className="font-semibold">"{currentDesign?.name || 'this design'}"</span>? This action cannot be undone.
+                </p>
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    onClick={() => setShowDeleteDialog(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteCurrentDesign}
+                    className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Design
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

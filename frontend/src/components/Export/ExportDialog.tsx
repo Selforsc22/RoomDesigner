@@ -47,12 +47,12 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose, onExport, 
     <>
       <style>{styles}</style>
       <div
-        className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm"
         onClick={onClose}
         style={{ animation: 'fadeIn 0.2s ease-out' }}
       />
       <div
-        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl w-full max-w-md"
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] bg-white rounded-xl shadow-2xl w-full max-w-md border border-gray-200"
         style={{ animation: 'slideUp 0.3s ease-out' }}
       >
         {/* Header */}
