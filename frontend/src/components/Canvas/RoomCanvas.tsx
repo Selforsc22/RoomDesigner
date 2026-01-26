@@ -650,7 +650,6 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
             const direction = item.lightDirection || 0;
             const intensity = item.lightIntensity || 80;
             const colorTemp = item.colorTemperature || 5600;
-            const beamAngle = item.beamAngle || 60;
 
             // Calculate color based on temperature
             const getLightColor = (temp: number) => {
@@ -662,17 +661,13 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
 
             const lightColor = getLightColor(colorTemp);
 
-            // Calculate beam projection - extends far beyond the fixture like real lighting diagrams
-            const beamLength = 400; // Extended beam length
-            const beamWidth = beamAngle * 2; // Width based on beam angle
-
             return (
               <div
                 key={item.id}
                 className={`absolute cursor-move transition-all duration-200 ease-out ${
                   selectedItemId === item.id
                     ? 'z-30'
-                    : ''
+                    : 'z-10'
                 } ${draggingItem === item.id ? 'cursor-grabbing' : 'cursor-grab'}`}
                 style={{
                   left: item.x * SCALE,
@@ -686,41 +681,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                 onMouseLeave={() => setHoveredItemId(null)}
                 title={`${item.name} - ${item.lightIntensity}% @ ${item.colorTemperature}K`}
               >
-                {/* Extended SVG for light beam projection - renders BEHIND the fixture */}
-                <svg
-                  width={displayWidth * 8}
-                  height={displayHeight * 8}
-                  viewBox="-300 -300 600 600"
-                  className="pointer-events-none absolute"
-                  style={{
-                    left: '50%',
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    overflow: 'visible',
-                    zIndex: 0,
-                  }}
-                >
-                  {/* Directional gradient glow */}
-                  <defs>
-                    <linearGradient id={`beam-gradient-${item.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor={lightColor} stopOpacity={intensity / 300} />
-                      <stop offset="50%" stopColor={lightColor} stopOpacity={intensity / 500} />
-                      <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-
-                  {/* Rotated group containing projected glow - extends far from origin */}
-                  <g transform={`rotate(${direction} 0 0)`}>
-                    {/* Projected gradient glow beam - large cone extending from fixture */}
-                    <path
-                      d={`M -20 0 L ${-beamWidth} ${beamLength} L ${beamWidth} ${beamLength} L 20 0 Z`}
-                      fill={`url(#beam-gradient-${item.id})`}
-                      opacity="0.6"
-                    />
-                  </g>
-                </svg>
-
-                {/* Light fixture icon - renders on TOP */}
+                {/* Light fixture icon */}
                 <svg
                   width={displayWidth}
                   height={displayHeight}
@@ -730,7 +691,6 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                     filter: selectedItemId === item.id
                       ? `drop-shadow(0 0 ${intensity / 5}px ${lightColor})`
                       : `drop-shadow(0 0 ${intensity / 10}px ${lightColor})`,
-                    zIndex: 10,
                   }}
                 >
                   {/* Rotated fixture icon */}
@@ -831,13 +791,54 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           );
         })}
 
-        {/* Light Beam Visualization */}
+        {/* Light Beam Visualization - Renders above background */}
         <svg
           className="absolute inset-0 pointer-events-none"
           width={canvasWidth}
           height={canvasHeight}
           style={{ zIndex: 5 }}
         >
+          <defs>
+            {furniture
+              .filter((item) => item.isLight && item.lightIntensity && item.lightIntensity > 0)
+              .map((light) => {
+                const centerX = (light.x + light.width / 2) * SCALE;
+                const centerY = (light.y + light.height / 2) * SCALE;
+                const direction = light.lightDirection || 0;
+                const beamLength = (120 - (light.beamAngle || 60)) * 2 + 200;
+                const directionRad = (direction * Math.PI) / 180;
+                const beamEndX = centerX + Math.cos(directionRad) * beamLength;
+                const beamEndY = centerY + Math.sin(directionRad) * beamLength;
+                const intensity = light.lightIntensity || 80;
+                const colorTemp = light.colorTemperature || 5600;
+
+                const getLightColor = (temp: number) => {
+                  if (temp < 4000) return '#FFB84D';
+                  if (temp < 5000) return '#FFF4E6';
+                  if (temp < 6000) return '#FFFFFF';
+                  return '#E6F3FF';
+                };
+
+                const lightColor = getLightColor(colorTemp);
+
+                return (
+                  <linearGradient
+                    key={`gradient-${light.id}`}
+                    id={`light-gradient-${light.id}`}
+                    x1={centerX}
+                    y1={centerY}
+                    x2={beamEndX}
+                    y2={beamEndY}
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop offset="0%" stopColor={lightColor} stopOpacity={intensity / 200} />
+                    <stop offset="30%" stopColor={lightColor} stopOpacity={intensity / 300} />
+                    <stop offset="70%" stopColor={lightColor} stopOpacity={intensity / 600} />
+                    <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
+                  </linearGradient>
+                );
+              })}
+          </defs>
           {furniture
             .filter((item) => item.isLight && item.lightIntensity && item.lightIntensity > 0)
             .map((light) => {
@@ -848,19 +849,6 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
               // Light direction (0 = right, 90 = down, 180 = left, 270 = up)
               const direction = light.lightDirection || 0;
               const beamAngle = light.beamAngle || 60;
-              const intensity = light.lightIntensity || 80;
-              const colorTemp = light.colorTemperature || 5600;
-
-              // Calculate color based on temperature
-              // 3200K = warm (orange), 5600K = daylight (white), 6500K = cool (blue)
-              const getLightColor = (temp: number) => {
-                if (temp < 4000) return '#FFB84D'; // Warm orange
-                if (temp < 5000) return '#FFF4E6'; // Warm white
-                if (temp < 6000) return '#FFFFFF'; // Neutral white
-                return '#E6F3FF'; // Cool blue-white
-              };
-
-              const lightColor = getLightColor(colorTemp);
 
               // Calculate beam length based on beam angle (wider = shorter visible range)
               const beamLength = (120 - beamAngle) * 2 + 200;
@@ -880,48 +868,19 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
 
               return (
                 <g key={`light-${light.id}`}>
-                  {/* Light beam cone */}
+                  {/* Light beam cone with gradient */}
                   <path
                     d={pathData}
-                    fill={lightColor}
-                    opacity={intensity / 400} // Scale opacity based on intensity
-                    stroke={lightColor}
-                    strokeWidth="1"
-                    strokeOpacity={intensity / 300}
-                    style={{
-                      animation: 'pulse 3s ease-in-out infinite',
-                    }}
+                    fill={`url(#light-gradient-${light.id})`}
+                    opacity="0.8"
                   >
                     <animate
                       attributeName="opacity"
-                      values={`${intensity / 400};${intensity / 350};${intensity / 400}`}
+                      values="0.7;0.9;0.7"
                       dur="3s"
                       repeatCount="indefinite"
                     />
                   </path>
-
-                  {/* Light source indicator (small circle) */}
-                  <circle
-                    cx={centerX}
-                    cy={centerY}
-                    r={4}
-                    fill={lightColor}
-                    opacity={intensity / 100}
-                    stroke="#FFD700"
-                    strokeWidth="2"
-                  />
-
-                  {/* Direction indicator line */}
-                  <line
-                    x1={centerX}
-                    y1={centerY}
-                    x2={centerX + Math.cos(directionRad) * 30}
-                    y2={centerY + Math.sin(directionRad) * 30}
-                    stroke={lightColor}
-                    strokeWidth="2"
-                    opacity={intensity / 150}
-                    strokeDasharray="4 2"
-                  />
                 </g>
               );
             })}
