@@ -38,16 +38,29 @@ export interface WallObject {
 
 export interface Door {
   id: string;
-  wall: 'north' | 'south' | 'east' | 'west';
-  x: number;
+  // Legacy mode (keep for compatibility):
+  wall?: 'north' | 'south' | 'east' | 'west';
+  x?: number;
+
+  // New wall mode:
+  wallId?: string;
+  position?: number; // 0-1 normalized position along wall
+
   width: number;
 }
 
 export interface Window {
   id: string;
-  wall: 'north' | 'south' | 'east' | 'west';
-  x: number;
-  y: number;
+  // Legacy mode (keep for compatibility):
+  wall?: 'north' | 'south' | 'east' | 'west';
+  x?: number;
+  y?: number;
+
+  // New wall mode:
+  wallId?: string;
+  position?: number; // 0-1 normalized position along wall
+  heightFromFloor?: number; // height from floor
+
   width: number;
   height: number;
 }
@@ -63,17 +76,43 @@ export interface RoomSection {
   connectedTo?: string[]; // IDs of adjacent sections for rendering walls
 }
 
+export interface Wall {
+  id: string;
+  startX: number;  // feet
+  startY: number;  // feet
+  endX: number;    // feet
+  endY: number;    // feet
+  thickness: number; // feet (default 0.5)
+  type: 'exterior' | 'interior';
+  connectedWalls?: string[]; // IDs of walls that connect at endpoints
+}
+
+export interface FloorPlan {
+  id: string;
+  walls: Wall[];
+  bounds: {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  };
+}
+
 export interface Design {
   _id: string;
   userId: string;
   name: string;
   thumbnail?: string;
-  roomDimensions: {
+  roomDimensions?: {
     width: number;
     height: number;
   };
   // Optional: Support for complex room shapes (L, T, U, etc.)
   roomSections?: RoomSection[]; // When present, overrides single roomDimensions
+  // NEW: Free-form wall mode (mutually exclusive with roomSections)
+  floorPlan?: FloorPlan;
+  // NEW: North direction (0 = north is up, 90 = north is right, etc.)
+  northAngle?: number; // degrees, default 0
   furniture: FurnitureItem[];
   wallObjects: WallObject[];
   doors: Door[];
