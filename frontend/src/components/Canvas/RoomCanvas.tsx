@@ -717,21 +717,14 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                       fill="none"
                     />
 
-                    {/* Light indicator on fixture - pulsing */}
+                    {/* Light indicator on fixture - static */}
                     <circle
                       cx="50"
                       cy="40"
                       r="4"
                       fill={lightColor}
-                      opacity="0.9"
-                    >
-                      <animate
-                        attributeName="opacity"
-                        values="0.5;1;0.5"
-                        dur="2s"
-                        repeatCount="indefinite"
-                      />
-                    </circle>
+                      opacity="1"
+                    />
                   </g>
 
                   {/* Selection ring */}

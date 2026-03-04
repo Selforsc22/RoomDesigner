@@ -17,19 +17,20 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   if (!selectedItem) {
     return (
-      <div className={`${isCollapsed ? 'w-16' : 'w-60'} bg-white shadow-lg transition-all duration-300 flex flex-col`}>
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          {!isCollapsed && <LucideIcons.Settings className="w-5 h-5 text-gray-400" />}
+      <div className={`${isCollapsed ? 'w-16' : 'w-60'} sidebar-matte scrollbar-matte transition-all duration-300 flex flex-col`}>
+        <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-subtle)' }}>
+          {!isCollapsed && <LucideIcons.Settings className="w-5 h-5" style={{ color: 'var(--text-tertiary)' }} />}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-auto"
+            className="icon-btn-glossy ml-auto"
             title={isCollapsed ? 'Expand panel' : 'Collapse panel'}
           >
             <svg
-              className="w-5 h-5 text-gray-600"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              style={{ color: 'var(--text-secondary)' }}
             >
               {isCollapsed ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -41,7 +42,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
         {!isCollapsed && (
           <div className="flex-1 flex items-center justify-center p-6">
-            <div className="text-center text-gray-400">
+            <div className="text-center" style={{ color: 'var(--text-tertiary)' }}>
               <LucideIcons.MousePointer2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p className="text-sm font-medium">Select an item to edit its properties</p>
             </div>
@@ -79,24 +80,25 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   };
 
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-60'} bg-white shadow-lg overflow-y-auto transition-all duration-300`}>
-      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+    <div className={`${isCollapsed ? 'w-16' : 'w-60'} sidebar-matte scrollbar-matte overflow-y-auto transition-all duration-300`}>
+      <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-subtle)' }}>
         {!isCollapsed && (
           <div className="flex items-center gap-2">
-            <LucideIcons.Settings className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-bold text-gray-900">Properties</h2>
+            <LucideIcons.Settings className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Properties</h2>
           </div>
         )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-auto"
+          className="icon-btn-glossy ml-auto"
           title={isCollapsed ? 'Expand panel' : 'Collapse panel'}
         >
           <svg
-            className="w-5 h-5 text-gray-600"
+            className="w-5 h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            style={{ color: 'var(--text-secondary)' }}
           >
             {isCollapsed ? (
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -111,21 +113,21 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <div className="space-y-4">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
               Name
             </label>
             <input
               type="text"
               value={item.name || ''}
               onChange={(e) => onUpdate({ name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              className="input-matte w-full"
             />
           </div>
 
           {/* Dimensions */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1" title="Width of the item in feet">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }} title="Width of the item in feet">
                 Width (ft)
               </label>
               <input
@@ -134,12 +136,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.5"
                 value={item.width || 0}
                 onChange={(e) => onUpdate({ width: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                className="input-matte w-full"
                 title={`Set width to ${item.width || 0} feet`}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1" title="Height of the item in feet">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }} title="Height of the item in feet">
                 Height (ft)
               </label>
               <input
@@ -148,7 +150,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.5"
                 value={item.height || 0}
                 onChange={(e) => onUpdate({ height: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                className="input-matte w-full"
                 title={`Set height to ${item.height || 0} feet`}
               />
             </div>
@@ -157,7 +159,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Position */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1" title="Horizontal position from left edge of room">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }} title="Horizontal position from left edge of room">
                 X Position
               </label>
               <input
@@ -165,12 +167,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.1"
                 value={item.x?.toFixed(1) || 0}
                 onChange={(e) => onUpdate({ x: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                className="input-matte w-full"
                 title={`Horizontal position: ${item.x?.toFixed(1) || 0} feet from left`}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1" title="Vertical position from top edge of room">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }} title="Vertical position from top edge of room">
                 Y Position
               </label>
               <input
@@ -178,7 +180,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.1"
                 value={item.y?.toFixed(1) || 0}
                 onChange={(e) => onUpdate({ y: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                className="input-matte w-full"
                 title={`Vertical position: ${item.y?.toFixed(1) || 0} feet from top`}
               />
             </div>
@@ -210,7 +212,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               </label>
               <button
                 onClick={handleRotate}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                className="btn-glossy btn-glossy-neutral w-full flex items-center justify-center gap-2 py-2.5 px-4 font-medium"
                 title="Rotate item by 90 degrees clockwise"
               >
                 <LucideIcons.RotateCw className="w-4 h-4" />
@@ -389,7 +391,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Delete Button */}
           <button
             onClick={onDelete}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors shadow-sm hover:shadow-md"
+            className="btn-glossy btn-glossy-danger w-full flex items-center justify-center gap-2 py-2.5 px-4 font-semibold"
           >
             <LucideIcons.Trash2 className="w-4 h-4" />
             Delete

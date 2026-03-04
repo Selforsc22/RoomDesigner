@@ -561,7 +561,7 @@ const MainLayout: React.FC = () => {
       {/* Main Canvas Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="bg-white shadow-sm border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+        <div className="toolbar-matte px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <input
               type="text"
@@ -569,7 +569,10 @@ const MainLayout: React.FC = () => {
               onChange={(e) =>
                 setCurrentDesign({ ...currentDesign, name: e.target.value })
               }
-              className="text-lg font-bold border-0 border-b-2 border-transparent hover:border-gray-200 focus:border-primary px-2 py-1 focus:outline-none transition-all bg-transparent"
+              className="text-lg font-bold border-0 border-b-2 border-transparent px-2 py-1 focus:outline-none transition-all bg-transparent"
+              style={{ color: 'var(--text-primary)', borderBottomColor: 'transparent' }}
+              onFocus={(e) => e.target.style.borderBottomColor = 'var(--accent-primary)'}
+              onBlur={(e) => e.target.style.borderBottomColor = 'transparent'}
             />
             {viewMode === 'room' && (
               <>
@@ -577,12 +580,12 @@ const MainLayout: React.FC = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowTemplateDropdown(!showTemplateDropdown)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+                    className="icon-btn-glossy flex items-center gap-2 px-4 py-2"
                   >
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium">
                       {ROOM_TEMPLATES.find(t => t.id === selectedTemplateId)?.name || 'Room Type'}
                     </span>
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                    <ChevronDown className="w-4 h-4" />
                   </button>
 
                   {showTemplateDropdown && (
@@ -614,8 +617,8 @@ const MainLayout: React.FC = () => {
                 {/* Width/Height controls - only show for simple room */}
                 {!currentDesign.roomSections && (
                   <>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-                      <label className="text-sm font-medium text-gray-700">Width:</label>
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'var(--bg-surface)' }}>
+                      <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Width:</label>
                   <input
                     type="number"
                     min="8"
@@ -628,13 +631,13 @@ const MainLayout: React.FC = () => {
                         currentDesign.roomDimensions.height
                       )
                     }
-                    className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="input-matte w-16 px-2 py-1 text-sm font-medium"
                     title="Set room width (8-100 feet)"
                   />
-                  <span className="text-sm text-gray-500">ft</span>
+                  <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>ft</span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-                  <label className="text-sm font-medium text-gray-700">Height:</label>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'var(--bg-surface)' }}>
+                  <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Height:</label>
                   <input
                     type="number"
                     min="8"
@@ -647,10 +650,10 @@ const MainLayout: React.FC = () => {
                         parseFloat(e.target.value)
                       )
                     }
-                    className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="input-matte w-16 px-2 py-1 text-sm font-medium"
                     title="Set room height (8-100 feet)"
                   />
-                  <span className="text-sm text-gray-500">ft</span>
+                  <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>ft</span>
                 </div>
                   </>
                 )}
@@ -664,45 +667,45 @@ const MainLayout: React.FC = () => {
                   />
                   <span className="text-sm font-medium text-gray-700">Show Grid</span>
                 </label>
-                <div className="flex items-center gap-1 ml-4 border-l pl-4">
+                <div className="flex items-center gap-1 ml-4 pl-4" style={{ borderLeft: '1px solid var(--border-subtle)' }}>
                   <button
                     onClick={handleUndo}
                     disabled={historyIndex <= 0}
-                    className="p-1.5 hover:bg-gray-100 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="icon-btn-glossy p-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                     title="Undo"
                   >
-                    <Undo className="w-4 h-4 text-gray-600" />
+                    <Undo className="w-4 h-4" />
                   </button>
                   <button
                     onClick={handleRedo}
                     disabled={historyIndex >= history.length - 1}
-                    className="p-1.5 hover:bg-gray-100 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="icon-btn-glossy p-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                     title="Redo"
                   >
-                    <Redo className="w-4 h-4 text-gray-600" />
+                    <Redo className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex items-center gap-1 border-l pl-4">
+                <div className="flex items-center gap-1 pl-4" style={{ borderLeft: '1px solid var(--border-subtle)' }}>
                   <button
                     onClick={handleZoomOut}
-                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    className="icon-btn-glossy p-1.5"
                     title="Zoom Out"
                   >
-                    <ZoomOut className="w-4 h-4 text-gray-600" />
+                    <ZoomOut className="w-4 h-4" />
                   </button>
                   <button
                     onClick={handleResetZoom}
-                    className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors min-w-[3rem]"
+                    className="icon-btn-glossy px-2 py-1 text-xs font-medium min-w-[3rem]"
                     title="Reset Zoom"
                   >
                     {Math.round(zoom * 100)}%
                   </button>
                   <button
                     onClick={handleZoomIn}
-                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    className="icon-btn-glossy p-1.5"
                     title="Zoom In"
                   >
-                    <ZoomIn className="w-4 h-4 text-gray-600" />
+                    <ZoomIn className="w-4 h-4" />
                   </button>
                 </div>
               </>
@@ -711,17 +714,17 @@ const MainLayout: React.FC = () => {
           <div className="flex items-center gap-6">
             {/* Room Measurements */}
             {viewMode === 'room' && (
-              <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-4 px-4 py-2 rounded-lg" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)' }}>
                 <div className="flex flex-col">
-                  <span className="text-xs text-gray-500">Total Area</span>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Total Area</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     {(currentDesign.roomDimensions.width * currentDesign.roomDimensions.height).toFixed(0)} sq ft
                   </span>
                 </div>
-                <div className="h-8 w-px bg-gray-300" />
+                <div className="h-8 w-px" style={{ background: 'var(--border-medium)' }} />
                 <div className="flex flex-col">
-                  <span className="text-xs text-gray-500">Items</span>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Items</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     {currentDesign.furniture.length + currentDesign.doors.length + currentDesign.windows.length}
                   </span>
                 </div>

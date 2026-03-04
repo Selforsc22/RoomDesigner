@@ -180,13 +180,13 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   };
 
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white shadow-lg overflow-y-auto flex flex-col transition-all duration-300`}>
+    <div className={`${isCollapsed ? 'w-16' : 'w-64'} sidebar-matte scrollbar-matte overflow-y-auto flex flex-col transition-all duration-300`}>
       {/* Header with Toggle */}
-      <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-b from-white to-gray-50">
-        {!isCollapsed && <h1 className="text-xl font-bold text-gray-900">Room Planner</h1>}
+      <div className="p-4 border-b border-b-[--border-subtle] flex items-center justify-between" style={{ background: 'linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)' }}>
+        {!isCollapsed && <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Room Planner</h1>}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+          className="icon-btn-glossy"
           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <svg
@@ -205,50 +205,42 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       </div>
 
       {/* View Mode Toggle */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="p-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
         {isCollapsed ? (
           <div className="flex flex-col space-y-2">
             <button
               onClick={() => onViewModeChange('room')}
-              className={`py-2 px-2 rounded-lg font-semibold text-xs transition-all ${
-                viewMode === 'room'
-                  ? 'bg-primary text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={viewMode === 'room' ? 'btn-glossy btn-glossy-primary py-2 px-2 text-xs' : 'icon-btn-glossy py-2 px-2 text-xs'}
               title="Room View"
             >
               R
             </button>
             <button
               onClick={() => onViewModeChange('wall')}
-              className={`py-2 px-2 rounded-lg font-semibold text-xs transition-all ${
-                viewMode === 'wall'
-                  ? 'bg-primary text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={viewMode === 'wall' ? 'btn-glossy btn-glossy-primary py-2 px-2 text-xs' : 'icon-btn-glossy py-2 px-2 text-xs'}
               title="Wall View"
             >
               W
             </button>
           </div>
         ) : (
-          <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+          <div className="flex gap-2 p-1 rounded-lg" style={{ background: 'var(--bg-tertiary)' }}>
             <button
               onClick={() => onViewModeChange('room')}
-              className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all ${
+              className={`flex-1 py-2.5 px-4 font-semibold text-sm ${
                 viewMode === 'room'
-                  ? 'bg-white text-primary shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'btn-glossy btn-glossy-primary'
+                  : 'icon-btn-glossy'
               }`}
             >
               Room
             </button>
             <button
               onClick={() => onViewModeChange('wall')}
-              className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all ${
+              className={`flex-1 py-2.5 px-4 font-semibold text-sm ${
                 viewMode === 'wall'
-                  ? 'bg-white text-primary shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'btn-glossy btn-glossy-primary'
+                  : 'icon-btn-glossy'
               }`}
             >
               Wall
@@ -265,14 +257,14 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             <LightingPresets onApplyPreset={onApplyLightingPreset} />
 
             {/* Search Bar */}
-            <div className="p-4 border-b border-gray-100">
+            <div className="p-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Search equipment..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                  className="input-matte w-full pl-10 pr-4 py-2 text-sm"
                 />
                 {getIcon('Search')}
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -295,42 +287,47 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </div>
 
             {/* Furniture Library - Organized by Category */}
-            <div className="border-b border-gray-100">
+            <div className="border-b" style={{ borderColor: 'var(--border-subtle)' }}>
               {Object.entries(furnitureByCategory).map(([category, items]) => {
                 const categoryInfo = categoryLabels[category] || { name: category, icon: 'Box' };
                 const isExpanded = expandedCategories.has(category);
 
                 return (
-                  <div key={category} className="border-b border-gray-100 last:border-b-0">
+                  <div key={category} className="border-b last:border-b-0" style={{ borderColor: 'var(--border-subtle)' }}>
                     {/* Category Header */}
                     <button
                       onClick={() => toggleCategory(category)}
-                      className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                      className="category-header-matte w-full p-4 flex items-center justify-between"
                     >
                       <div className="flex items-center gap-2">
                         {getIcon(categoryInfo.icon)}
-                        <h2 className="font-bold text-gray-800 text-xs uppercase tracking-wider">
+                        <h2 className="font-bold text-xs uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
                           {categoryInfo.name}
                         </h2>
-                        <span className="text-xs text-gray-500">({items.length})</span>
+                        <span className="badge-matte">{items.length}</span>
                       </div>
                       {getIcon(isExpanded ? 'ChevronDown' : 'ChevronRight')}
                     </button>
 
                     {/* Category Items */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 space-y-1">
+                      <div className="px-4 pb-4 space-y-2">
                         {items.map((furnitureType) => (
                           <button
                             key={furnitureType.type}
                             onClick={() => handleAddFurniture(furnitureType)}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
+                            className="item-card-matte w-full flex items-center gap-3 text-sm"
                             title={`Add ${furnitureType.name} (${furnitureType.width}' × ${furnitureType.height}'${furnitureType.isLight ? ' - Light source' : ''})`}
                           >
-                            <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                            <span className="flex items-center justify-center w-10 h-10 rounded-md" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
                               {getIcon(furnitureType.icon)}
                             </span>
-                            <span className="font-medium">{furnitureType.name}</span>
+                            <div className="flex-1 text-left">
+                              <span className="font-medium block" style={{ color: 'var(--text-primary)' }}>{furnitureType.name}</span>
+                              {furnitureType.isLight && (
+                                <span className="badge-accent text-xs mt-1 inline-block">Light</span>
+                              )}
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -341,28 +338,28 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </div>
 
             {/* Door and Window */}
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">Add Elements</h2>
-              <div className="space-y-1">
+            <div className="p-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+              <h2 className="font-bold mb-3 text-xs uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Add Elements</h2>
+              <div className="space-y-2">
                 <button
                   onClick={handleAddDoor}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
+                  className="item-card-matte w-full flex items-center gap-3 text-sm"
                   title="Add Door (3' wide)"
                 >
-                  <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-md" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
                     {getIcon('DoorOpen')}
                   </span>
-                  <span className="font-medium">Door</span>
+                  <span className="font-medium" style={{ color: 'var(--text-primary)' }}>Door</span>
                 </button>
                 <button
                   onClick={handleAddWindow}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
+                  className="item-card-matte w-full flex items-center gap-3 text-sm"
                   title="Add Window (4' × 3')"
                 >
-                  <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-md" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
                     {getIcon('RectangleHorizontal')}
                   </span>
-                  <span className="font-medium">Window</span>
+                  <span className="font-medium" style={{ color: 'var(--text-primary)' }}>Window</span>
                 </button>
               </div>
             </div>
