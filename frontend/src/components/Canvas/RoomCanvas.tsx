@@ -1,5 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import type { FurnitureItem, Door, Window as WindowType, RoomSection } from '../../types';
+import LightBeamLayer from './layers/LightBeamLayer';
+import LightFixtureLayer from './layers/LightFixtureLayer';
+import AmbientLightLayer from './layers/AmbientLightLayer';
+import { Z } from '../../constants/layers';
 
 interface RoomCanvasProps {
   roomDimensions: { width: number; height: number };
@@ -647,109 +651,9 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           const displayHeight = isRotated ? item.width * SCALE : item.height * SCALE;
           const isHovered = hoveredItemId === item.id;
 
-          // Special rendering for lights
-          if (item.isLight) {
-            const direction = item.lightDirection || 0;
-            const intensity = item.lightIntensity || 80;
-            const colorTemp = item.colorTemperature || 5600;
-
-            // Calculate color based on temperature
-            const getLightColor = (temp: number) => {
-              if (temp < 4000) return '#FFB84D'; // Warm orange
-              if (temp < 5000) return '#FFF4E6'; // Warm white
-              if (temp < 6000) return '#FFFFFF'; // Neutral white
-              return '#E6F3FF'; // Cool blue-white
-            };
-
-            const lightColor = getLightColor(colorTemp);
-
-            return (
-              <div
-                key={item.id}
-                className={`absolute cursor-move transition-all duration-200 ease-out ${
-                  selectedItemId === item.id
-                    ? 'z-[35]'
-                    : 'z-[25]'
-                } ${draggingItem === item.id ? 'cursor-grabbing' : 'cursor-grab'}`}
-                style={{
-                  left: item.x * SCALE,
-                  top: item.y * SCALE,
-                  width: displayWidth,
-                  height: displayHeight,
-                  opacity: draggingItem === item.id ? 0.7 : 1,
-                }}
-                onMouseDown={(e) => handleMouseDown(e, item.id)}
-                onMouseEnter={() => setHoveredItemId(item.id)}
-                onMouseLeave={() => setHoveredItemId(null)}
-                title={`${item.name} - ${item.lightIntensity}% @ ${item.colorTemperature}K`}
-              >
-                {/* Light fixture icon */}
-                <svg
-                  width={displayWidth}
-                  height={displayHeight}
-                  viewBox="0 0 100 100"
-                  className="pointer-events-none relative"
-                  style={{
-                    filter: selectedItemId === item.id
-                      ? `drop-shadow(0 0 ${intensity / 5}px ${lightColor})`
-                      : `drop-shadow(0 0 ${intensity / 10}px ${lightColor})`,
-                  }}
-                >
-                  {/* Rotated fixture icon */}
-                  <g transform={`rotate(${direction} 50 50)`}>
-                    {/* Light body */}
-                    <rect
-                      x="35"
-                      y="30"
-                      width="30"
-                      height="20"
-                      rx="3"
-                      fill={item.color}
-                      stroke={lightColor}
-                      strokeWidth="2"
-                    />
-
-                    {/* Direction arrow */}
-                    <path
-                      d="M 50 50 L 50 75 M 45 70 L 50 75 L 55 70"
-                      stroke={lightColor}
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-
-                    {/* Light indicator on fixture - static */}
-                    <circle
-                      cx="50"
-                      cy="40"
-                      r="4"
-                      fill={lightColor}
-                      opacity="1"
-                    />
-                  </g>
-
-                  {/* Selection ring */}
-                  {selectedItemId === item.id && (
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="48"
-                      fill="none"
-                      stroke="#3B82F6"
-                      strokeWidth="3"
-                      opacity="0.8"
-                    />
-                  )}
-                </svg>
-
-                {/* Label */}
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap bg-white/90 px-2 py-0.5 rounded shadow-sm pointer-events-none z-20">
-                  {item.name}
-                </div>
-              </div>
-            );
-          }
+          // Lights render in LightFixtureLayer (all lighting visuals live in
+          // dedicated layers backed by utils/lighting)
+          if (item.isLight) return null;
 
           // Regular furniture rendering
           return (
@@ -757,7 +661,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
               key={item.id}
               className={`absolute cursor-move flex flex-col items-center justify-center text-xs font-semibold rounded-md transition-all duration-200 ease-out ${
                 selectedItemId === item.id
-                  ? 'ring-4 ring-primary ring-opacity-50 shadow-2xl scale-110 z-30'
+                  ? 'ring-4 ring-primary ring-opacity-50 shadow-2xl scale-110'
                   : 'shadow-md hover:shadow-xl hover:scale-105'
               } ${draggingItem === item.id ? 'cursor-grabbing scale-110' : 'cursor-grab'}`}
               style={{
@@ -768,6 +672,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
                 background: `linear-gradient(135deg, ${item.color} 0%, ${item.color}dd 100%)`,
                 opacity: draggingItem === item.id ? 0.7 : 1,
                 transform: draggingItem === item.id ? 'rotate(2deg)' : 'rotate(0deg)',
+                zIndex: selectedItemId === item.id ? Z.SELECTED : Z.FURNITURE,
               }}
               onMouseDown={(e) => handleMouseDown(e, item.id)}
               onMouseEnter={() => setHoveredItemId(item.id)}
@@ -786,150 +691,27 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           );
         })}
 
-        {/* Light Beam Visualization - Renders above background, below fixtures */}
-        <svg
-          className="absolute inset-0 pointer-events-none"
-          width={canvasWidth}
-          height={canvasHeight}
-          style={{ zIndex: 15 }}
-        >
-          <defs>
-            {furniture
-              .filter((item) => item.isLight && item.lightIntensity && item.lightIntensity > 0)
-              .map((light) => {
-                const centerX = (light.x + light.width / 2) * SCALE;
-                const centerY = (light.y + light.height / 2) * SCALE;
-                const direction = light.lightDirection || 0;
-                const beamLength = (120 - (light.beamAngle || 60)) * 2 + 200;
-                const directionRad = (direction * Math.PI) / 180;
-                const beamEndX = centerX + Math.cos(directionRad) * beamLength;
-                const beamEndY = centerY + Math.sin(directionRad) * beamLength;
-                const intensity = light.lightIntensity || 80;
-                const colorTemp = light.colorTemperature || 5600;
+        {/* Light beams — geometry and falloff from utils/lighting */}
+        <LightBeamLayer
+          furniture={furniture}
+          scale={SCALE}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
+          roomDims={roomDimensions}
+        />
 
-                const getLightColor = (temp: number) => {
-                  if (temp < 4000) return '#FFB84D';
-                  if (temp < 5000) return '#FFF4E6';
-                  if (temp < 6000) return '#FFFFFF';
-                  return '#E6F3FF';
-                };
+        {/* Light fixtures */}
+        <LightFixtureLayer
+          furniture={furniture}
+          scale={SCALE}
+          selectedItemId={selectedItemId}
+          draggingItemId={draggingItem}
+          onMouseDown={handleMouseDown}
+          onHoverChange={setHoveredItemId}
+        />
 
-                const lightColor = getLightColor(colorTemp);
-
-                return (
-                  <linearGradient
-                    key={`gradient-${light.id}`}
-                    id={`light-gradient-${light.id}`}
-                    x1={centerX}
-                    y1={centerY}
-                    x2={beamEndX}
-                    y2={beamEndY}
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop offset="0%" stopColor={lightColor} stopOpacity={intensity / 100} />
-                    <stop offset="40%" stopColor={lightColor} stopOpacity={intensity / 150} />
-                    <stop offset="80%" stopColor={lightColor} stopOpacity={intensity / 400} />
-                    <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
-                  </linearGradient>
-                );
-              })}
-          </defs>
-          {furniture
-            .filter((item) => item.isLight && item.lightIntensity && item.lightIntensity > 0)
-            .map((light) => {
-              // Calculate light center position
-              const centerX = (light.x + light.width / 2) * SCALE;
-              const centerY = (light.y + light.height / 2) * SCALE;
-
-              // Light direction (0 = right, 90 = down, 180 = left, 270 = up)
-              const direction = light.lightDirection || 0;
-              const beamAngle = light.beamAngle || 60;
-
-              // Calculate beam length based on beam angle (wider = shorter visible range)
-              const beamLength = (120 - beamAngle) * 2 + 200;
-
-              // Calculate beam end points based on direction
-              const directionRad = (direction * Math.PI) / 180;
-              const halfBeamAngleRad = ((beamAngle / 2) * Math.PI) / 180;
-
-              // Calculate the three points of the beam triangle
-              const leftEdgeX = centerX + Math.cos(directionRad - halfBeamAngleRad) * beamLength;
-              const leftEdgeY = centerY + Math.sin(directionRad - halfBeamAngleRad) * beamLength;
-
-              const rightEdgeX = centerX + Math.cos(directionRad + halfBeamAngleRad) * beamLength;
-              const rightEdgeY = centerY + Math.sin(directionRad + halfBeamAngleRad) * beamLength;
-
-              const pathData = `M ${centerX} ${centerY} L ${leftEdgeX} ${leftEdgeY} L ${rightEdgeX} ${rightEdgeY} Z`;
-
-              return (
-                <g key={`light-${light.id}`}>
-                  {/* Light beam cone with gradient - static, no animation */}
-                  <path
-                    d={pathData}
-                    fill={`url(#light-gradient-${light.id})`}
-                  />
-                </g>
-              );
-            })}
-        </svg>
-
-        {/* Ambient Light Color Overlay */}
-        {(() => {
-          const activeLights = furniture.filter(
-            (item) => item.isLight && item.lightIntensity && item.lightIntensity > 0
-          );
-
-          if (activeLights.length === 0) return null;
-
-          // Calculate average color temperature weighted by intensity
-          let totalWeightedTemp = 0;
-          let totalWeight = 0;
-
-          activeLights.forEach((light) => {
-            const intensity = light.lightIntensity || 80;
-            const colorTemp = light.colorTemperature || 5600;
-            totalWeightedTemp += colorTemp * intensity;
-            totalWeight += intensity;
-          });
-
-          const avgTemp = totalWeightedTemp / totalWeight;
-
-          // Determine overlay color based on average temperature
-          let overlayColor = '';
-          let overlayOpacity = 0;
-
-          if (avgTemp < 3800) {
-            overlayColor = '#FF8C00'; // Deep orange for very warm
-            overlayOpacity = 0.08;
-          } else if (avgTemp < 4500) {
-            overlayColor = '#FFB84D'; // Orange for warm
-            overlayOpacity = 0.06;
-          } else if (avgTemp < 5200) {
-            overlayColor = '#FFF4E6'; // Warm white
-            overlayOpacity = 0.04;
-          } else if (avgTemp < 6000) {
-            overlayColor = '#FFFFFF'; // Neutral
-            overlayOpacity = 0.02;
-          } else if (avgTemp < 6500) {
-            overlayColor = '#E6F3FF'; // Cool white
-            overlayOpacity = 0.04;
-          } else {
-            overlayColor = '#B3D9FF'; // Blue for very cool
-            overlayOpacity = 0.06;
-          }
-
-          return (
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundColor: overlayColor,
-                opacity: overlayOpacity,
-                mixBlendMode: 'multiply',
-                zIndex: 10,
-              }}
-            />
-          );
-        })()}
+        {/* Ambient color cast from active lights */}
+        <AmbientLightLayer furniture={furniture} />
       </div>
     </div>
   );
