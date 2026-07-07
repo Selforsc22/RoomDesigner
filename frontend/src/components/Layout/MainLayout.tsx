@@ -12,6 +12,7 @@ import { ROOM_TEMPLATES, instantiateTemplate, calculateBounds } from '../../conf
 import { getRoomDimensions } from '../../utils/design';
 import KeyboardShortcuts from '../Help/KeyboardShortcuts';
 import ExportDialog from '../Export/ExportDialog';
+import { Z } from '../../constants/layers';
 
 const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -524,8 +525,8 @@ const MainLayout: React.FC = () => {
 
   if (!currentDesign) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-surface-base">
+        <div className="text-xl text-ink-secondary">Loading...</div>
       </div>
     );
   }
@@ -533,7 +534,7 @@ const MainLayout: React.FC = () => {
   const roomDims = getRoomDimensions(currentDesign);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-surface-base">
       {/* Left Sidebar */}
       <LeftSidebar
         viewMode={viewMode}
@@ -566,7 +567,7 @@ const MainLayout: React.FC = () => {
           the toolbar forces the column under the properties panel */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="toolbar-matte px-6 py-4 flex items-center justify-between flex-wrap gap-y-2">
+        <div className="bg-surface-raised border-b border-line-subtle shadow-sm px-6 py-4 flex items-center justify-between flex-wrap gap-y-2">
           <div className="flex items-center gap-6 flex-wrap gap-y-2">
             <input
               type="text"
@@ -574,10 +575,7 @@ const MainLayout: React.FC = () => {
               onChange={(e) =>
                 setCurrentDesign({ ...currentDesign, name: e.target.value })
               }
-              className="text-lg font-bold border-0 border-b-2 border-transparent px-2 py-1 focus:outline-none transition-all bg-transparent"
-              style={{ color: 'var(--text-primary)', borderBottomColor: 'transparent' }}
-              onFocus={(e) => e.target.style.borderBottomColor = 'var(--accent-primary)'}
-              onBlur={(e) => e.target.style.borderBottomColor = 'transparent'}
+              className="text-lg font-bold text-ink bg-transparent border-0 border-b-2 border-transparent focus:border-accent px-2 py-1 focus:outline-none transition-colors"
             />
             {viewMode === 'room' && (
               <>
@@ -599,18 +597,18 @@ const MainLayout: React.FC = () => {
                         className="fixed inset-0 z-10"
                         onClick={() => setShowTemplateDropdown(false)}
                       />
-                      <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-96 overflow-y-auto">
+                      <div className="absolute top-full left-0 mt-1 w-64 bg-surface-overlay rounded-lg shadow-xl border border-line-medium z-20 max-h-96 overflow-y-auto scrollbar-matte">
                         {ROOM_TEMPLATES.map((template) => (
                           <button
                             key={template.id}
                             onClick={() => applyRoomTemplate(template.id)}
-                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                              selectedTemplateId === template.id ? 'bg-primary/5' : ''
+                            className={`w-full text-left px-4 py-3 hover:bg-surface-hover transition-colors border-b border-line-subtle last:border-b-0 ${
+                              selectedTemplateId === template.id ? 'bg-accent/15' : ''
                             }`}
                           >
                             <div className="flex flex-col">
-                              <span className="font-medium text-gray-900">{template.name}</span>
-                              <span className="text-xs text-gray-500 mt-0.5">{template.description}</span>
+                              <span className="font-medium text-ink">{template.name}</span>
+                              <span className="text-xs text-ink-muted mt-0.5">{template.description}</span>
                             </div>
                           </button>
                         ))}
@@ -622,8 +620,8 @@ const MainLayout: React.FC = () => {
                 {/* Width/Height controls - only show for simple room */}
                 {!currentDesign.roomSections && (
                   <>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'var(--bg-surface)' }}>
-                      <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Width:</label>
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-overlay">
+                      <label className="text-sm font-medium text-ink-secondary">Width:</label>
                   <input
                     type="number"
                     min="8"
@@ -636,13 +634,13 @@ const MainLayout: React.FC = () => {
                         roomDims.height
                       )
                     }
-                    className="input-matte w-16 px-2 py-1 text-sm font-medium"
+                    className="w-16 px-2 py-1 text-sm font-medium bg-surface-hover border border-line-medium rounded-md text-ink focus:outline-none focus:border-accent transition-colors"
                     title="Set room width (8-100 feet)"
                   />
-                  <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>ft</span>
+                  <span className="text-sm text-ink-muted">ft</span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'var(--bg-surface)' }}>
-                  <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Height:</label>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-overlay">
+                  <label className="text-sm font-medium text-ink-secondary">Height:</label>
                   <input
                     type="number"
                     min="8"
@@ -655,24 +653,24 @@ const MainLayout: React.FC = () => {
                         parseFloat(e.target.value)
                       )
                     }
-                    className="input-matte w-16 px-2 py-1 text-sm font-medium"
+                    className="w-16 px-2 py-1 text-sm font-medium bg-surface-hover border border-line-medium rounded-md text-ink focus:outline-none focus:border-accent transition-colors"
                     title="Set room height (8-100 feet)"
                   />
-                  <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>ft</span>
+                  <span className="text-sm text-ink-muted">ft</span>
                 </div>
                   </>
                 )}
 
-                <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors" title="Toggle grid overlay for precise positioning (G)">
+                <label className="flex items-center gap-2 px-4 py-2 bg-surface-overlay rounded-lg cursor-pointer hover:bg-surface-hover transition-colors" title="Toggle grid overlay for precise positioning (G)">
                   <input
                     type="checkbox"
                     checked={showGrid}
                     onChange={(e) => setShowGrid(e.target.checked)}
-                    className="rounded text-primary focus:ring-primary"
+                    className="rounded accent-accent"
                   />
-                  <span className="text-sm font-medium text-gray-700">Show Grid</span>
+                  <span className="text-sm font-medium text-ink-secondary">Show Grid</span>
                 </label>
-                <div className="flex items-center gap-1 ml-4 pl-4" style={{ borderLeft: '1px solid var(--border-subtle)' }}>
+                <div className="flex items-center gap-1 ml-4 pl-4 border-l border-line-subtle">
                   <button
                     onClick={handleUndo}
                     disabled={historyIndex <= 0}
@@ -690,7 +688,7 @@ const MainLayout: React.FC = () => {
                     <Redo className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex items-center gap-1 pl-4" style={{ borderLeft: '1px solid var(--border-subtle)' }}>
+                <div className="flex items-center gap-1 pl-4 border-l border-line-subtle">
                   <button
                     onClick={handleZoomOut}
                     className="icon-btn-glossy p-1.5"
@@ -719,26 +717,26 @@ const MainLayout: React.FC = () => {
           <div className="flex items-center gap-6">
             {/* Room Measurements */}
             {viewMode === 'room' && (
-              <div className="flex items-center gap-4 px-4 py-2 rounded-lg" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)' }}>
+              <div className="flex items-center gap-4 px-4 py-2 rounded-lg bg-surface-overlay border border-line-medium">
                 <div className="flex flex-col">
-                  <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Total Area</span>
-                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <span className="text-xs text-ink-muted">Total Area</span>
+                  <span className="text-sm font-medium text-ink">
                     {(roomDims.width * roomDims.height).toFixed(0)} sq ft
                   </span>
                 </div>
-                <div className="h-8 w-px" style={{ background: 'var(--border-medium)' }} />
+                <div className="h-8 w-px bg-line-medium" />
                 <div className="flex flex-col">
-                  <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Items</span>
-                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <span className="text-xs text-ink-muted">Items</span>
+                  <span className="text-sm font-medium text-ink">
                     {currentDesign.furniture.length + currentDesign.doors.length + currentDesign.windows.length}
                   </span>
                 </div>
                 {currentDesign.roomSections && currentDesign.roomSections.length > 0 && (
                   <>
-                    <div className="h-8 w-px bg-gray-300" />
+                    <div className="h-8 w-px bg-line-medium" />
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-500">Sections</span>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-xs text-ink-muted">Sections</span>
+                      <span className="text-sm font-medium text-ink">
                         {currentDesign.roomSections.length}
                       </span>
                     </div>
@@ -750,32 +748,32 @@ const MainLayout: React.FC = () => {
             {/* Export Button */}
             <button
               onClick={() => setShowExportDialog(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="icon-btn-glossy"
               title="Export Design"
             >
-              <Download className="w-5 h-5 text-gray-600" />
+              <Download className="w-5 h-5" />
             </button>
 
             {/* Delete Button */}
             <button
               onClick={() => setShowDeleteDialog(true)}
-              className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+              className="icon-btn-glossy hover:!border-danger"
               title="Delete Current Design"
             >
-              <Trash2 className="w-5 h-5 text-red-600" />
+              <Trash2 className="w-5 h-5 text-danger" />
             </button>
 
             {/* Help Button */}
             <button
               onClick={() => setShowKeyboardShortcuts(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="icon-btn-glossy"
               title="Keyboard Shortcuts (?)"
             >
-              <HelpCircle className="w-5 h-5 text-gray-600" />
+              <HelpCircle className="w-5 h-5" />
             </button>
 
             {/* Save Status */}
-            <span className="text-sm text-gray-600">
+            <span className={`text-sm ${saveStatus === 'error' ? 'text-danger' : 'text-ink-muted'}`}>
               {saveStatus === 'saving' && 'Saving...'}
               {saveStatus === 'saved' && '✓ Saved'}
               {saveStatus === 'error' && '⚠ Error saving'}
@@ -783,8 +781,8 @@ const MainLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* Canvas */}
-        <div ref={canvasContainerRef} className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Canvas workspace: dark surround, the canvas itself is a light sheet */}
+        <div ref={canvasContainerRef} className="flex-1 overflow-auto scrollbar-matte bg-gradient-to-br from-surface-base to-[#191b21]">
           {viewMode === 'room' ? (
             <RoomCanvas
               roomDimensions={roomDims}
@@ -862,29 +860,33 @@ const MainLayout: React.FC = () => {
       {showDeleteDialog && (
         <>
           <div
-            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+            className="dialog-backdrop-enter fixed inset-0 bg-black/60 backdrop-blur-sm"
+            style={{ zIndex: Z.MODAL }}
             onClick={() => setShowDeleteDialog(false)}
           />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+          <div
+            className="dialog-panel-enter fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface-raised border border-line-medium rounded-xl shadow-2xl w-full max-w-md p-6"
+            style={{ zIndex: Z.MODAL_PANEL }}
+          >
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <Trash2 className="w-6 h-6 text-red-600" />
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-danger/15 flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-danger" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Design</h3>
-                <p className="text-sm text-gray-600 mb-6">
-                  Are you sure you want to delete <span className="font-semibold">"{currentDesign?.name || 'this design'}"</span>? This action cannot be undone.
+                <h3 className="text-lg font-semibold text-ink mb-2">Delete Design</h3>
+                <p className="text-sm text-ink-secondary mb-6">
+                  Are you sure you want to delete <span className="font-semibold text-ink">"{currentDesign?.name || 'this design'}"</span>? This action cannot be undone.
                 </p>
                 <div className="flex items-center justify-end gap-3">
                   <button
                     onClick={() => setShowDeleteDialog(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-hover rounded-lg transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleDeleteCurrentDesign}
-                    className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
+                    className="btn-glossy btn-glossy-danger px-4 py-2 text-sm flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete Design

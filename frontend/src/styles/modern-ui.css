@@ -1,43 +1,30 @@
-/* Modern Matte UI Design System */
+/* Custom CSS that genuinely can't be Tailwind utilities:
+   glossy button effects (pseudo-elements), scrollbars, range-slider chrome,
+   and the dialog enter animation. All colors reference the same palette as
+   tailwind.config.js — change them together. */
 
 :root {
-  /* Matte Background Colors */
-  --bg-primary: #2A2D3A;
-  --bg-secondary: #1F2128;
+  --bg-surface: #3e4250;
   --bg-tertiary: #353945;
-  --bg-surface: #3E4250;
-  --bg-elevated: #4A4F5E;
-
-  /* Accent Colors - Vibrant for contrast */
-  --accent-primary: #6366F1;
-  --accent-primary-hover: #5558E3;
-  --accent-secondary: #8B5CF6;
-  --accent-success: #10B981;
-  --accent-warning: #F59E0B;
-  --accent-danger: #EF4444;
-
-  /* Text Colors */
-  --text-primary: #F9FAFB;
-  --text-secondary: #D1D5DB;
-  --text-tertiary: #9CA3AF;
-  --text-muted: #6B7280;
-
-  /* Border Colors */
-  --border-subtle: rgba(255, 255, 255, 0.1);
+  --bg-elevated: #4a4f5e;
+  --accent-primary: #6366f1;
+  --accent-primary-hover: #5558e3;
+  --accent-danger: #ef4444;
+  --accent-success: #10b981;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
   --border-medium: rgba(255, 255, 255, 0.15);
   --border-strong: rgba(255, 255, 255, 0.25);
 
-  /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
 
-  /* Glossy Button Gradients */
-  --gloss-highlight: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 100%);
+  --gloss-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.1) 100%);
 }
 
-/* Glossy Button Base */
+/* ---------- Glossy buttons ---------- */
+
 .btn-glossy {
   position: relative;
   overflow: hidden;
@@ -45,17 +32,14 @@
   border-radius: 8px;
   font-weight: 600;
   letter-spacing: 0.025em;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: var(--shadow-md);
 }
 
 .btn-glossy::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: var(--gloss-highlight);
   pointer-events: none;
 }
@@ -67,7 +51,7 @@
   left: 4px;
   right: 4px;
   height: 40%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 100%);
   border-radius: 6px 6px 50% 50%;
   pointer-events: none;
 }
@@ -82,7 +66,6 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* Primary Glossy Button */
 .btn-glossy-primary {
   background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-hover) 100%);
   color: var(--text-primary);
@@ -92,102 +75,23 @@
   background: linear-gradient(135deg, var(--accent-primary-hover) 0%, var(--accent-primary) 100%);
 }
 
-/* Secondary Glossy Button */
-.btn-glossy-secondary {
-  background: linear-gradient(135deg, var(--accent-secondary) 0%, #9333EA 100%);
-  color: var(--text-primary);
-}
-
-.btn-glossy-secondary:hover {
-  background: linear-gradient(135deg, #9333EA 0%, var(--accent-secondary) 100%);
-}
-
-/* Success Glossy Button */
 .btn-glossy-success {
   background: linear-gradient(135deg, var(--accent-success) 0%, #059669 100%);
   color: var(--text-primary);
 }
 
-/* Danger Glossy Button */
 .btn-glossy-danger {
-  background: linear-gradient(135deg, var(--accent-danger) 0%, #DC2626 100%);
+  background: linear-gradient(135deg, var(--accent-danger) 0%, #dc2626 100%);
   color: var(--text-primary);
 }
 
-/* Neutral Glossy Button */
 .btn-glossy-neutral {
   background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-tertiary) 100%);
   color: var(--text-primary);
   border: 1px solid var(--border-medium);
 }
 
-/* Matte Card */
-.card-matte {
-  background: var(--bg-surface);
-  border-radius: 12px;
-  border: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-md);
-}
-
-.card-matte-elevated {
-  background: var(--bg-elevated);
-  border-radius: 12px;
-  border: 1px solid var(--border-medium);
-  box-shadow: var(--shadow-lg);
-}
-
-/* Matte Surface */
-.surface-matte {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-.surface-matte-primary {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-.surface-matte-elevated {
-  background: var(--bg-surface);
-  color: var(--text-primary);
-}
-
-/* Input Fields */
-.input-matte {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-medium);
-  border-radius: 6px;
-  color: var(--text-primary);
-  padding: 0.5rem 0.75rem;
-  transition: all 0.2s ease;
-}
-
-.input-matte:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-  background: var(--bg-surface);
-}
-
-.input-matte::placeholder {
-  color: var(--text-muted);
-}
-
-/* Sidebar Styles */
-.sidebar-matte {
-  background: var(--bg-primary);
-  border-right: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-lg);
-}
-
-/* Toolbar Styles */
-.toolbar-matte {
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-sm);
-}
-
-/* Icon Buttons */
+/* Icon buttons */
 .icon-btn-glossy {
   position: relative;
   padding: 0.5rem;
@@ -195,7 +99,7 @@
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   color: var(--text-secondary);
-  transition: all 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   box-shadow: var(--shadow-sm);
 }
 
@@ -212,69 +116,14 @@
   box-shadow: var(--shadow-sm);
 }
 
-.icon-btn-glossy-active {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-hover) 100%);
-  color: var(--text-primary);
-  border-color: transparent;
-}
+/* ---------- Scrollbars ---------- */
 
-/* Category Headers */
-.category-header-matte {
-  background: var(--bg-tertiary);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.category-header-matte:hover {
-  background: var(--bg-surface);
-  border-color: var(--border-medium);
-}
-
-/* Item Cards */
-.item-card-matte {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 0.75rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.item-card-matte:hover {
-  background: var(--bg-surface);
-  border-color: var(--border-medium);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Badge */
-.badge-matte {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-medium);
-  border-radius: 9999px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.badge-accent {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-hover) 100%);
-  border: none;
-  color: var(--text-primary);
-}
-
-/* Scrollbar Styling */
 .scrollbar-matte::-webkit-scrollbar {
   width: 8px;
 }
 
 .scrollbar-matte::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 .scrollbar-matte::-webkit-scrollbar-thumb {
@@ -286,75 +135,70 @@
   background: var(--bg-elevated);
 }
 
-/* Divider */
-.divider-matte {
-  height: 1px;
-  background: var(--border-subtle);
-}
+/* ---------- Range sliders ---------- */
+/* Track backgrounds are set per-slider via inline gradients (data-driven,
+   e.g. the Kelvin sweep); this styles the chrome. */
 
-/* Toggle Switch */
-.toggle-matte {
-  position: relative;
-  width: 44px;
-  height: 24px;
-  background: var(--bg-tertiary);
-  border-radius: 12px;
+.slider-matte {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: var(--bg-tertiary);
   border: 1px solid var(--border-medium);
-  transition: all 0.3s ease;
-  cursor: pointer;
+  outline: none;
 }
 
-.toggle-matte.active {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-hover) 100%);
-  border-color: transparent;
-}
-
-.toggle-matte::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
+.slider-matte::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
   width: 18px;
   height: 18px;
-  background: white;
   border-radius: 50%;
-  transition: transform 0.3s ease;
-  box-shadow: var(--shadow-sm);
+  background: var(--text-primary);
+  border: 2.5px solid var(--accent-primary);
+  box-shadow: var(--shadow-md);
+  cursor: grab;
 }
 
-.toggle-matte.active::after {
-  transform: translateX(20px);
+.slider-matte::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.1);
 }
 
-/* Glass Effect */
-.glass-effect {
-  background: rgba(42, 45, 58, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border-subtle);
+.slider-matte::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  border: 2.5px solid var(--accent-primary);
+  box-shadow: var(--shadow-md);
+  cursor: grab;
 }
 
-/* Shine Animation for Buttons */
-@keyframes shine {
-  0% {
-    transform: translateX(-100%) skewX(-15deg);
+/* ---------- Dialog enter (user-triggered; 150ms per REVAMP A5) ---------- */
+
+@keyframes dialog-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dialog-panel-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
   }
-  100% {
-    transform: translateX(200%) skewX(-15deg);
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
-.btn-glossy-shine {
-  position: relative;
-  overflow: hidden;
+.dialog-backdrop-enter {
+  animation: dialog-backdrop-enter 0.15s ease-out;
 }
 
-.btn-glossy-shine::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: shine 3s infinite;
+.dialog-panel-enter {
+  animation: dialog-panel-enter 0.15s ease-out;
 }

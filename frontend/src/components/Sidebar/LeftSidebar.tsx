@@ -180,10 +180,10 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   };
 
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-64'} sidebar-matte scrollbar-matte overflow-y-auto flex flex-col transition-all duration-300`}>
+    <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-surface-raised border-r border-line-subtle text-ink scrollbar-matte overflow-y-auto flex flex-col transition-all duration-300`}>
       {/* Header with Toggle */}
-      <div className="p-4 border-b border-b-[--border-subtle] flex items-center justify-between" style={{ background: 'linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)' }}>
-        {!isCollapsed && <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Room Planner</h1>}
+      <div className="p-4 border-b border-line-subtle flex items-center justify-between bg-gradient-to-b from-surface-raised to-surface-base">
+        {!isCollapsed && <h1 className="text-xl font-bold text-ink">Room Planner</h1>}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="icon-btn-glossy"
@@ -205,7 +205,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       </div>
 
       {/* View Mode Toggle */}
-      <div className="p-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+      <div className="p-4 border-b border-line-subtle">
         {isCollapsed ? (
           <div className="flex flex-col space-y-2">
             <button
@@ -224,7 +224,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </button>
           </div>
         ) : (
-          <div className="flex gap-2 p-1 rounded-lg" style={{ background: 'var(--bg-tertiary)' }}>
+          <div className="flex gap-2 p-1 rounded-lg bg-surface-overlay">
             <button
               onClick={() => onViewModeChange('room')}
               className={`flex-1 py-2.5 px-4 font-semibold text-sm ${
@@ -257,14 +257,14 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             <LightingPresets onApplyPreset={onApplyLightingPreset} />
 
             {/* Search Bar */}
-            <div className="p-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+            <div className="p-4 border-b border-line-subtle">
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Search equipment..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="input-matte w-full pl-10 pr-4 py-2 text-sm"
+                  className="w-full pl-10 pr-4 py-2 text-sm bg-surface-overlay border border-line-medium rounded-md text-ink placeholder:text-ink-faint focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-colors"
                 />
                 {getIcon('Search')}
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -280,31 +280,31 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 )}
               </div>
               {searchQuery && (
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="mt-2 text-xs text-ink-muted">
                   Found {filteredFurniture.length} item{filteredFurniture.length !== 1 ? 's' : ''}
                 </p>
               )}
             </div>
 
             {/* Furniture Library - Organized by Category */}
-            <div className="border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+            <div className="border-b border-line-subtle">
               {Object.entries(furnitureByCategory).map(([category, items]) => {
                 const categoryInfo = categoryLabels[category] || { name: category, icon: 'Box' };
                 const isExpanded = expandedCategories.has(category);
 
                 return (
-                  <div key={category} className="border-b last:border-b-0" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <div key={category} className="border-b border-line-subtle last:border-b-0">
                     {/* Category Header */}
                     <button
                       onClick={() => toggleCategory(category)}
-                      className="category-header-matte w-full p-4 flex items-center justify-between"
+                      className="w-full p-4 flex items-center justify-between text-ink hover:bg-surface-hover transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         {getIcon(categoryInfo.icon)}
-                        <h2 className="font-bold text-xs uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+                        <h2 className="font-bold text-xs uppercase tracking-wider text-ink">
                           {categoryInfo.name}
                         </h2>
-                        <span className="badge-matte">{items.length}</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-surface-hover border border-line-medium text-ink-secondary">{items.length}</span>
                       </div>
                       {getIcon(isExpanded ? 'ChevronDown' : 'ChevronRight')}
                     </button>
@@ -316,16 +316,16 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                           <button
                             key={furnitureType.type}
                             onClick={() => handleAddFurniture(furnitureType)}
-                            className="item-card-matte w-full flex items-center gap-3 text-sm"
+                            className="w-full flex items-center gap-3 text-sm p-2.5 bg-surface-overlay border border-line-subtle rounded-lg hover:bg-surface-hover hover:border-line-medium hover:shadow-md transition-all"
                             title={`Add ${furnitureType.name} (${furnitureType.width}' × ${furnitureType.height}'${furnitureType.isLight ? ' - Light source' : ''})`}
                           >
-                            <span className="flex items-center justify-center w-10 h-10 rounded-md" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
+                            <span className="flex items-center justify-center w-10 h-10 rounded-md bg-surface-hover text-ink-secondary shrink-0">
                               {getIcon(furnitureType.icon)}
                             </span>
-                            <div className="flex-1 text-left">
-                              <span className="font-medium block" style={{ color: 'var(--text-primary)' }}>{furnitureType.name}</span>
+                            <div className="flex-1 text-left min-w-0">
+                              <span className="font-medium block text-ink truncate">{furnitureType.name}</span>
                               {furnitureType.isLight && (
-                                <span className="badge-accent text-xs mt-1 inline-block">Light</span>
+                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-accent text-ink mt-1 inline-block">Light</span>
                               )}
                             </div>
                           </button>
@@ -338,28 +338,28 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </div>
 
             {/* Door and Window */}
-            <div className="p-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
-              <h2 className="font-bold mb-3 text-xs uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Add Elements</h2>
+            <div className="p-4 border-b border-line-subtle">
+              <h2 className="font-bold mb-3 text-xs uppercase tracking-wider text-ink">Add Elements</h2>
               <div className="space-y-2">
                 <button
                   onClick={handleAddDoor}
-                  className="item-card-matte w-full flex items-center gap-3 text-sm"
+                  className="w-full flex items-center gap-3 text-sm p-2.5 bg-surface-overlay border border-line-subtle rounded-lg hover:bg-surface-hover hover:border-line-medium hover:shadow-md transition-all"
                   title="Add Door (3' wide)"
                 >
-                  <span className="flex items-center justify-center w-10 h-10 rounded-md" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
+                  <span className="flex items-center justify-center w-10 h-10 rounded-md bg-surface-hover text-ink-secondary shrink-0">
                     {getIcon('DoorOpen')}
                   </span>
-                  <span className="font-medium" style={{ color: 'var(--text-primary)' }}>Door</span>
+                  <span className="font-medium text-ink">Door</span>
                 </button>
                 <button
                   onClick={handleAddWindow}
-                  className="item-card-matte w-full flex items-center gap-3 text-sm"
+                  className="w-full flex items-center gap-3 text-sm p-2.5 bg-surface-overlay border border-line-subtle rounded-lg hover:bg-surface-hover hover:border-line-medium hover:shadow-md transition-all"
                   title="Add Window (4' × 3')"
                 >
-                  <span className="flex items-center justify-center w-10 h-10 rounded-md" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
+                  <span className="flex items-center justify-center w-10 h-10 rounded-md bg-surface-hover text-ink-secondary shrink-0">
                     {getIcon('RectangleHorizontal')}
                   </span>
-                  <span className="font-medium" style={{ color: 'var(--text-primary)' }}>Window</span>
+                  <span className="font-medium text-ink">Window</span>
                 </button>
               </div>
             </div>
@@ -379,17 +379,17 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
         ) : (
           <>
             {/* Wall Selector */}
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">Select Wall</h2>
+            <div className="p-4 border-b border-line-subtle">
+              <h2 className="font-bold text-ink mb-3 text-xs uppercase tracking-wider">Select Wall</h2>
               <div className="grid grid-cols-2 gap-2">
                 {(['north', 'south', 'east', 'west'] as WallType[]).map((wall) => (
                   <button
                     key={wall}
                     onClick={() => onWallChange(wall)}
-                    className={`py-2 px-4 rounded font-medium capitalize ${
+                    className={`py-2 px-4 font-medium capitalize ${
                       selectedWall === wall
-                        ? 'bg-primary text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'btn-glossy btn-glossy-primary'
+                        : 'icon-btn-glossy'
                     }`}
                   >
                     {wall}
@@ -399,20 +399,20 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </div>
 
             {/* Wall Objects Library */}
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">Add Wall Objects</h2>
-              <div className="space-y-1">
+            <div className="p-4 border-b border-line-subtle">
+              <h2 className="font-bold text-ink mb-3 text-xs uppercase tracking-wider">Add Wall Objects</h2>
+              <div className="space-y-2">
                 {WALL_OBJECT_TYPES.map((wallObjectType) => (
                   <button
                     key={wallObjectType.type}
                     onClick={() => handleAddWallObject(wallObjectType)}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group"
+                    className="w-full flex items-center gap-3 text-sm p-2.5 bg-surface-overlay border border-line-subtle rounded-lg hover:bg-surface-hover hover:border-line-medium hover:shadow-md transition-all"
                     title={`Add ${wallObjectType.name} (${wallObjectType.width}' × ${wallObjectType.height}')`}
                   >
-                    <span className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                    <span className="flex items-center justify-center w-10 h-10 rounded-md bg-surface-hover text-ink-secondary shrink-0">
                       {getIcon(wallObjectType.icon)}
                     </span>
-                    <span className="font-medium">{wallObjectType.name}</span>
+                    <span className="font-medium text-ink">{wallObjectType.name}</span>
                   </button>
                 ))}
               </div>
@@ -421,29 +421,29 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
         )}
 
         {/* My Designs */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-line-subtle">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-gray-900">My Designs</h2>
+            <h2 className="font-semibold text-ink">My Designs</h2>
             <button
               onClick={onNewDesign}
-              className="text-sm text-primary hover:text-blue-600 font-medium"
+              className="text-sm text-accent hover:text-accent-hover font-medium transition-colors"
             >
               + New
             </button>
           </div>
-          <div className="space-y-1 max-h-48 overflow-y-auto">
+          <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-matte">
             {designs.map((design) => (
               <div
                 key={design._id}
-                className={`flex items-center gap-2 px-3 py-2 text-sm rounded group ${
+                className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md group transition-colors ${
                   currentDesignId === design._id
-                    ? 'bg-primary text-white'
-                    : 'hover:bg-gray-100'
+                    ? 'bg-accent text-ink'
+                    : 'text-ink-secondary hover:bg-surface-hover hover:text-ink'
                 }`}
               >
                 <button
                   onClick={() => onDesignSelect(design._id)}
-                  className="flex-1 text-left"
+                  className="flex-1 text-left truncate"
                 >
                   {design.name}
                 </button>
@@ -454,10 +454,10 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                       onDeleteDesign(design._id);
                     }
                   }}
-                  className={`p-1 rounded hover:bg-red-100 transition-all ${
+                  className={`p-1 rounded transition-colors ${
                     currentDesignId === design._id
-                      ? 'text-white hover:text-red-600'
-                      : 'text-gray-500 hover:text-red-600'
+                      ? 'text-ink hover:text-red-200 hover:bg-red-500/40'
+                      : 'text-ink-muted hover:text-danger hover:bg-danger/15'
                   }`}
                   title="Delete design"
                 >
@@ -470,17 +470,17 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       </div>}
 
       {/* User Profile */}
-      {!isCollapsed && <div className="p-4 border-t border-gray-200">
+      {!isCollapsed && <div className="p-4 border-t border-line-subtle">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-semibold">
+            <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-ink font-semibold">
               {user?.username?.charAt(0).toUpperCase()}
             </div>
-            <span className="text-sm font-medium text-gray-900">{user?.username}</span>
+            <span className="text-sm font-medium text-ink">{user?.username}</span>
           </div>
           <button
             onClick={onLogout}
-            className="text-sm text-gray-600 hover:text-gray-900"
+            className="text-sm text-ink-muted hover:text-ink transition-colors"
           >
             Logout
           </button>

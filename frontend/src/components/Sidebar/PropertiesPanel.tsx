@@ -1,11 +1,31 @@
 import React, { useState } from 'react';
 import * as LucideIcons from 'lucide-react';
+import { kelvinToRGB } from '../../utils/lighting';
 
 interface PropertiesPanelProps {
   selectedItem: { type: string; item: any } | null;
   onUpdate: (updates: any) => void;
   onDelete: () => void;
 }
+
+const inputClass =
+  'w-full bg-surface-overlay border border-line-medium rounded-md px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-colors';
+
+const labelClass = 'block text-sm font-medium text-ink-secondary mb-1';
+
+// Kelvin slider track: real warm->cool sweep from the lighting engine
+const KELVIN_TRACK = `linear-gradient(to right, ${kelvinToRGB(3200)}, ${kelvinToRGB(4400)}, ${kelvinToRGB(5600)}, ${kelvinToRGB(6500)})`;
+const INTENSITY_TRACK = 'linear-gradient(to right, #23252e, #f9fafb)';
+
+const CollapseChevron: React.FC<{ collapsed: boolean }> = ({ collapsed }) => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    {collapsed ? (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+    ) : (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    )}
+  </svg>
+);
 
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   selectedItem,
@@ -17,32 +37,20 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   if (!selectedItem) {
     return (
-      <div className={`${isCollapsed ? 'w-16' : 'w-60'} sidebar-matte scrollbar-matte transition-all duration-300 flex flex-col`}>
-        <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-subtle)' }}>
-          {!isCollapsed && <LucideIcons.Settings className="w-5 h-5" style={{ color: 'var(--text-tertiary)' }} />}
+      <div className={`${isCollapsed ? 'w-16' : 'w-60'} bg-surface-raised border-l border-line-subtle text-ink scrollbar-matte transition-all duration-300 flex flex-col`}>
+        <div className="p-4 border-b border-line-subtle flex items-center justify-between">
+          {!isCollapsed && <LucideIcons.Settings className="w-5 h-5 text-ink-muted" />}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="icon-btn-glossy ml-auto"
             title={isCollapsed ? 'Expand panel' : 'Collapse panel'}
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              {isCollapsed ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              )}
-            </svg>
+            <CollapseChevron collapsed={isCollapsed} />
           </button>
         </div>
         {!isCollapsed && (
           <div className="flex-1 flex items-center justify-center p-6">
-            <div className="text-center" style={{ color: 'var(--text-tertiary)' }}>
+            <div className="text-center text-ink-muted">
               <LucideIcons.MousePointer2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p className="text-sm font-medium">Select an item to edit its properties</p>
             </div>
@@ -80,12 +88,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   };
 
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-60'} sidebar-matte scrollbar-matte overflow-y-auto transition-all duration-300`}>
-      <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-subtle)' }}>
+    <div className={`${isCollapsed ? 'w-16' : 'w-60'} bg-surface-raised border-l border-line-subtle text-ink scrollbar-matte overflow-y-auto transition-all duration-300`}>
+      <div className="p-4 border-b border-line-subtle flex items-center justify-between">
         {!isCollapsed && (
           <div className="flex items-center gap-2">
-            <LucideIcons.Settings className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Properties</h2>
+            <LucideIcons.Settings className="w-5 h-5 text-accent" />
+            <h2 className="text-lg font-bold text-ink">Properties</h2>
           </div>
         )}
         <button
@@ -93,19 +101,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           className="icon-btn-glossy ml-auto"
           title={isCollapsed ? 'Expand panel' : 'Collapse panel'}
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            {isCollapsed ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            )}
-          </svg>
+          <CollapseChevron collapsed={isCollapsed} />
         </button>
       </div>
       {!isCollapsed && <div className="p-6">
@@ -113,21 +109,19 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <div className="space-y-4">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
-              Name
-            </label>
+            <label className={labelClass}>Name</label>
             <input
               type="text"
               value={item.name || ''}
               onChange={(e) => onUpdate({ name: e.target.value })}
-              className="input-matte w-full"
+              className={inputClass}
             />
           </div>
 
           {/* Dimensions */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }} title="Width of the item in feet">
+              <label className={labelClass} title="Width of the item in feet">
                 Width (ft)
               </label>
               <input
@@ -136,12 +130,11 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.5"
                 value={item.width || 0}
                 onChange={(e) => onUpdate({ width: parseFloat(e.target.value) })}
-                className="input-matte w-full"
-                title={`Set width to ${item.width || 0} feet`}
+                className={inputClass}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }} title="Height of the item in feet">
+              <label className={labelClass} title="Height of the item in feet">
                 Height (ft)
               </label>
               <input
@@ -150,8 +143,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.5"
                 value={item.height || 0}
                 onChange={(e) => onUpdate({ height: parseFloat(e.target.value) })}
-                className="input-matte w-full"
-                title={`Set height to ${item.height || 0} feet`}
+                className={inputClass}
               />
             </div>
           </div>
@@ -159,7 +151,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Position */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }} title="Horizontal position from left edge of room">
+              <label className={labelClass} title="Horizontal position from left edge of room">
                 X Position
               </label>
               <input
@@ -167,12 +159,11 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.1"
                 value={item.x?.toFixed(1) || 0}
                 onChange={(e) => onUpdate({ x: parseFloat(e.target.value) })}
-                className="input-matte w-full"
-                title={`Horizontal position: ${item.x?.toFixed(1) || 0} feet from left`}
+                className={inputClass}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }} title="Vertical position from top edge of room">
+              <label className={labelClass} title="Vertical position from top edge of room">
                 Y Position
               </label>
               <input
@@ -180,8 +171,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 step="0.1"
                 value={item.y?.toFixed(1) || 0}
                 onChange={(e) => onUpdate({ y: parseFloat(e.target.value) })}
-                className="input-matte w-full"
-                title={`Vertical position: ${item.y?.toFixed(1) || 0} feet from top`}
+                className={inputClass}
               />
             </div>
           </div>
@@ -189,27 +179,23 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Color (for furniture) */}
           {type === 'furniture' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1" title="Click to choose a color for this item">
+              <label className={labelClass} title="Click to choose a color for this item">
                 Color
               </label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={item.color || '#8B7355'}
-                  onChange={(e) => onUpdate({ color: e.target.value })}
-                  className="h-10 w-full rounded border border-gray-300"
-                  title={`Current color: ${item.color || '#8B7355'}`}
-                />
-              </div>
+              <input
+                type="color"
+                value={item.color || '#8B7355'}
+                onChange={(e) => onUpdate({ color: e.target.value })}
+                className="h-10 w-full rounded-md border border-line-medium bg-surface-overlay cursor-pointer"
+                title={`Current color: ${item.color || '#8B7355'}`}
+              />
             </div>
           )}
 
           {/* Rotation (for furniture) */}
           {type === 'furniture' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Rotation
-              </label>
+              <label className={labelClass}>Rotation</label>
               <button
                 onClick={handleRotate}
                 className="btn-glossy btn-glossy-neutral w-full flex items-center justify-center gap-2 py-2.5 px-4 font-medium"
@@ -226,7 +212,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             <>
               {/* Light Intensity */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" title="Adjust brightness of the light (0% = off, 100% = maximum)">
+                <label className={labelClass} title="Adjust brightness of the light (0% = off, 100% = maximum)">
                   Light Intensity
                 </label>
                 <div className="space-y-2">
@@ -236,12 +222,13 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     max="100"
                     value={item.lightIntensity || 80}
                     onChange={(e) => onUpdate({ lightIntensity: parseInt(e.target.value) })}
-                    className="w-full"
+                    className="slider-matte"
+                    style={{ background: INTENSITY_TRACK }}
                     title={`Set light brightness to ${item.lightIntensity || 80}%`}
                   />
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-xs text-ink-muted">
                     <span>0%</span>
-                    <span className="font-medium text-gray-700">{item.lightIntensity || 80}%</span>
+                    <span className="font-medium text-ink">{item.lightIntensity || 80}%</span>
                     <span>100%</span>
                   </div>
                 </div>
@@ -249,7 +236,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
               {/* Color Temperature */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" title="Adjust the warmth/coolness of the light (3200K = warm tungsten, 5600K = daylight, 6500K = cool blue)">
+                <label className={labelClass} title="Adjust the warmth/coolness of the light (3200K = warm tungsten, 5600K = daylight, 6500K = cool blue)">
                   Color Temperature
                 </label>
                 <div className="space-y-2">
@@ -260,20 +247,21 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     step="100"
                     value={item.colorTemperature || 5600}
                     onChange={(e) => onUpdate({ colorTemperature: parseInt(e.target.value) })}
-                    className="w-full"
+                    className="slider-matte"
+                    style={{ background: KELVIN_TRACK }}
                     title={`Set color temperature to ${item.colorTemperature || 5600}K`}
                   />
                   <div className="flex justify-between text-xs">
-                    <span className="text-orange-600">Warm</span>
-                    <span className="font-medium text-gray-700">{item.colorTemperature || 5600}K</span>
-                    <span className="text-blue-600">Cool</span>
+                    <span className="text-warning">Warm</span>
+                    <span className="font-medium text-ink">{item.colorTemperature || 5600}K</span>
+                    <span className="text-blue-300">Cool</span>
                   </div>
                 </div>
               </div>
 
               {/* Beam Angle */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" title="Adjust the spread of the light (15° = narrow spot, 120° = wide flood)">
+                <label className={labelClass} title="Adjust the spread of the light (15° = narrow spot, 120° = wide flood)">
                   Beam Angle
                 </label>
                 <div className="space-y-2">
@@ -284,20 +272,20 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     step="5"
                     value={item.beamAngle || 60}
                     onChange={(e) => onUpdate({ beamAngle: parseInt(e.target.value) })}
-                    className="w-full"
+                    className="slider-matte"
                     title={`Set beam angle to ${item.beamAngle || 60}°`}
                   />
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">Spot</span>
-                    <span className="font-medium text-gray-700">{item.beamAngle || 60}°</span>
-                    <span className="text-gray-500">Flood</span>
+                  <div className="flex justify-between text-xs text-ink-muted">
+                    <span>Spot</span>
+                    <span className="font-medium text-ink">{item.beamAngle || 60}°</span>
+                    <span>Flood</span>
                   </div>
                 </div>
               </div>
 
               {/* Height off Ground */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" title="Set the vertical position of the light above the floor">
+                <label className={labelClass} title="Set the vertical position of the light above the floor">
                   Height (ft)
                 </label>
                 <input
@@ -307,15 +295,15 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   step="0.5"
                   value={item.zHeight || 6}
                   onChange={(e) => onUpdate({ zHeight: parseFloat(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                  className={inputClass}
                   title={`Light is positioned ${item.zHeight || 6} feet above the floor`}
                 />
-                <p className="mt-1 text-xs text-gray-500">Height above floor</p>
+                <p className="mt-1 text-xs text-ink-muted">Height above floor</p>
               </div>
 
               {/* Light Direction */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" title="Adjust which direction the light is pointing (0° = right, 90° = down, 180° = left, 270° = up)">
+                <label className={labelClass} title="Adjust which direction the light is pointing (0° = right, 90° = down, 180° = left, 270° = up)">
                   Light Direction
                 </label>
                 <div className="space-y-2">
@@ -326,25 +314,28 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     step="15"
                     value={item.lightDirection || 0}
                     onChange={(e) => onUpdate({ lightDirection: parseInt(e.target.value) })}
-                    className="w-full"
+                    className="slider-matte"
                     title={`Light pointing at ${item.lightDirection || 0}° angle`}
                   />
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-xs text-ink-muted">
                     <span>0°</span>
-                    <span className="font-medium text-gray-700">{item.lightDirection || 0}°</span>
+                    <span className="font-medium text-ink">{item.lightDirection || 0}°</span>
                     <span>360°</span>
                   </div>
+                  <p className="text-xs text-ink-faint">
+                    Tip: drag the ring around the light on the canvas to aim it
+                  </p>
                 </div>
               </div>
 
-              {/* Visual Indicator */}
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              {/* Light summary card */}
+              <div className="p-3 bg-surface-overlay border border-line-medium rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
-                  <LucideIcons.Lightbulb className="w-4 h-4 text-yellow-600" />
-                  <span className="text-xs font-medium text-yellow-900">Light Source</span>
+                  <LucideIcons.Lightbulb className="w-4 h-4 text-warning" />
+                  <span className="text-xs font-semibold text-ink">Light Source</span>
                 </div>
-                <p className="text-xs text-yellow-700">
-                  This item emits light with {item.lightIntensity || 80}% intensity at {item.colorTemperature || 5600}K
+                <p className="text-xs text-ink-secondary">
+                  Emits at {item.lightIntensity || 80}% intensity, {item.colorTemperature || 5600}K
                 </p>
               </div>
             </>
@@ -353,20 +344,18 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           {/* Image Upload (for wall objects) */}
           {type === 'wallObject' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image
-              </label>
+              <label className={labelClass}>Image</label>
               <div className="space-y-2">
                 {item.image && (
                   <div className="relative">
                     <img
                       src={item.image}
                       alt="Preview"
-                      className="w-full h-32 object-cover rounded border border-gray-300"
+                      className="w-full h-32 object-cover rounded-md border border-line-medium"
                     />
                     <button
                       onClick={() => onUpdate({ image: undefined })}
-                      className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+                      className="absolute top-2 right-2 bg-danger text-ink px-2 py-1 rounded text-xs hover:bg-red-600 transition-colors"
                     >
                       Remove
                     </button>
@@ -379,7 +368,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     onChange={handleImageUpload}
                     className="hidden"
                   />
-                  <div className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium text-center cursor-pointer transition-colors">
+                  <div className="btn-glossy btn-glossy-neutral w-full flex items-center justify-center gap-2 py-2.5 px-4 font-medium text-center cursor-pointer">
                     <LucideIcons.Upload className="w-4 h-4" />
                     {uploadingImage ? 'Uploading...' : 'Upload Image'}
                   </div>
