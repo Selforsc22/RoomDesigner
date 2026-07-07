@@ -154,37 +154,43 @@ const WallCanvas: React.FC<WallCanvasProps> = ({
           </svg>
         )}
 
-        {/* Doors */}
-        {doors.map((door) => (
-          <div
-            key={door.id}
-            className="absolute bg-amber-700 flex items-center justify-center text-white text-xs font-medium"
-            style={{
-              left: door.x * SCALE,
-              bottom: 0,
-              width: door.width * SCALE,
-              height: WALL_HEIGHT * SCALE,
-            }}
-          >
-            Door
-          </div>
-        ))}
+        {/* Doors (legacy wall-edge mode only) */}
+        {doors.map((door) => {
+          if (door.x === undefined) return null;
+          return (
+            <div
+              key={door.id}
+              className="absolute bg-amber-700 flex items-center justify-center text-white text-xs font-medium"
+              style={{
+                left: door.x * SCALE,
+                bottom: 0,
+                width: door.width * SCALE,
+                height: WALL_HEIGHT * SCALE,
+              }}
+            >
+              Door
+            </div>
+          );
+        })}
 
-        {/* Windows */}
-        {windows.map((window) => (
-          <div
-            key={window.id}
-            className="absolute bg-blue-200 border-2 border-blue-400 flex items-center justify-center text-blue-800 text-xs font-medium"
-            style={{
-              left: window.x * SCALE,
-              bottom: window.y * SCALE,
-              width: window.width * SCALE,
-              height: window.height * SCALE,
-            }}
-          >
-            Window
-          </div>
-        ))}
+        {/* Windows (legacy wall-edge mode only) */}
+        {windows.map((window) => {
+          if (window.x === undefined || window.y === undefined) return null;
+          return (
+            <div
+              key={window.id}
+              className="absolute bg-blue-200 border-2 border-blue-400 flex items-center justify-center text-blue-800 text-xs font-medium"
+              style={{
+                left: window.x * SCALE,
+                bottom: window.y * SCALE,
+                width: window.width * SCALE,
+                height: window.height * SCALE,
+              }}
+            >
+              Window
+            </div>
+          );
+        })}
 
         {/* Wall Objects */}
         {wallObjects.map((item) => (

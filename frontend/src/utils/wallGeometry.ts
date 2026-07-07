@@ -140,9 +140,8 @@ export function calculateFloorPlanBounds(walls: Wall[]): FloorPlan['bounds'] {
   return { minX, minY, maxX, maxY };
 }
 
-// Calculate wall segments with openings
+// Calculate solid wall segments between openings (positions normalized 0-1)
 export function calculateWallSegments(
-  wall: Wall,
   openings: WallOpening[]
 ): Array<{ start: number; end: number }> {
   // Sort openings by position
@@ -170,8 +169,7 @@ export function calculateWallSegments(
 // Get door/window position on wall (in feet coordinates)
 export function getOpeningPosition(
   wall: Wall,
-  position: number, // 0-1 normalized
-  width: number
+  position: number // 0-1 normalized
 ): {
   centerX: number;
   centerY: number;

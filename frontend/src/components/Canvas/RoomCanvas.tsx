@@ -596,8 +596,9 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           </svg>
         )}
 
-        {/* Doors */}
+        {/* Doors (legacy wall-edge mode; wall-mode doors render in the wall layer) */}
         {doors.map((door) => {
+          if (!door.wall || door.x === undefined) return null;
           const x = door.wall === 'west' ? 0 : door.wall === 'east' ? roomDimensions.width * SCALE - 2 : door.x * SCALE;
           const y = door.wall === 'north' ? 0 : door.wall === 'south' ? roomDimensions.height * SCALE - 2 : door.x * SCALE;
           const width = door.wall === 'north' || door.wall === 'south' ? door.width * SCALE : 2;
@@ -617,8 +618,9 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           );
         })}
 
-        {/* Windows */}
+        {/* Windows (legacy wall-edge mode; wall-mode windows render in the wall layer) */}
         {windows.map((window) => {
+          if (!window.wall || window.x === undefined || window.y === undefined) return null;
           const x = window.wall === 'west' ? 0 : window.wall === 'east' ? roomDimensions.width * SCALE - 2 : window.x * SCALE;
           const y = window.wall === 'north' ? 0 : window.wall === 'south' ? roomDimensions.height * SCALE - 2 : window.y * SCALE;
           const width = window.wall === 'north' || window.wall === 'south' ? window.width * SCALE : 2;

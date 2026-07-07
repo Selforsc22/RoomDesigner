@@ -9,6 +9,7 @@ import RoomCanvas from '../Canvas/RoomCanvas';
 import WallCanvas from '../Canvas/WallCanvas';
 import { ZoomIn, ZoomOut, Undo, Redo, ChevronDown, HelpCircle, Download, Trash2 } from 'lucide-react';
 import { ROOM_TEMPLATES, instantiateTemplate, calculateBounds } from '../../config/roomTemplates';
+import { getRoomDimensions } from '../../utils/design';
 import KeyboardShortcuts from '../Help/KeyboardShortcuts';
 import ExportDialog from '../Export/ExportDialog';
 
@@ -529,6 +530,8 @@ const MainLayout: React.FC = () => {
     );
   }
 
+  const roomDims = getRoomDimensions(currentDesign);
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Left Sidebar */}
@@ -624,11 +627,11 @@ const MainLayout: React.FC = () => {
                     min="8"
                     max="100"
                     step="0.5"
-                    value={currentDesign.roomDimensions.width}
+                    value={roomDims.width}
                     onChange={(e) =>
                       updateRoomDimensions(
                         parseFloat(e.target.value),
-                        currentDesign.roomDimensions.height
+                        roomDims.height
                       )
                     }
                     className="input-matte w-16 px-2 py-1 text-sm font-medium"
@@ -643,10 +646,10 @@ const MainLayout: React.FC = () => {
                     min="8"
                     max="100"
                     step="0.5"
-                    value={currentDesign.roomDimensions.height}
+                    value={roomDims.height}
                     onChange={(e) =>
                       updateRoomDimensions(
-                        currentDesign.roomDimensions.width,
+                        roomDims.width,
                         parseFloat(e.target.value)
                       )
                     }
@@ -718,7 +721,7 @@ const MainLayout: React.FC = () => {
                 <div className="flex flex-col">
                   <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Total Area</span>
                   <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {(currentDesign.roomDimensions.width * currentDesign.roomDimensions.height).toFixed(0)} sq ft
+                    {(roomDims.width * roomDims.height).toFixed(0)} sq ft
                   </span>
                 </div>
                 <div className="h-8 w-px" style={{ background: 'var(--border-medium)' }} />
@@ -782,7 +785,7 @@ const MainLayout: React.FC = () => {
         <div ref={canvasContainerRef} className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-gray-100">
           {viewMode === 'room' ? (
             <RoomCanvas
-              roomDimensions={currentDesign.roomDimensions}
+              roomDimensions={roomDims}
               roomSections={currentDesign.roomSections}
               furniture={currentDesign.furniture}
               doors={currentDesign.doors}
@@ -797,7 +800,7 @@ const MainLayout: React.FC = () => {
           ) : (
             <WallCanvas
               wall={selectedWall}
-              roomDimensions={currentDesign.roomDimensions}
+              roomDimensions={roomDims}
               wallObjects={currentDesign.wallObjects.filter(
                 (obj) => obj.wall === selectedWall
               )}

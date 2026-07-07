@@ -3,7 +3,6 @@ import type { Wall, FloorPlan, Door, Window } from '../../types';
 import {
   getWallCorners,
   calculateWallLength,
-  calculateWallAngle,
   calculateWallSegments,
   getOpeningPosition,
   snapToGrid,
@@ -220,7 +219,7 @@ const WallRenderer: React.FC<WallRendererProps> = ({
   // Render a wall with openings
   const renderWallWithOpenings = (wall: Wall) => {
     const openings = getWallOpenings(wall);
-    const segments = calculateWallSegments(wall, openings);
+    const segments = calculateWallSegments(openings);
     const corners = getWallCorners(wall);
     const isSelected = selectedWallId === wall.id;
 
@@ -263,7 +262,7 @@ const WallRenderer: React.FC<WallRendererProps> = ({
             const door = doors.find((d) => d.id === opening.id);
             if (!door || !door.position) return null;
 
-            const pos = getOpeningPosition(wall, door.position, door.width);
+            const pos = getOpeningPosition(wall, door.position);
             const angle = pos.angle;
 
             return (
@@ -314,7 +313,7 @@ const WallRenderer: React.FC<WallRendererProps> = ({
             const window = windows.find((w) => w.id === opening.id);
             if (!window || !window.position) return null;
 
-            const pos = getOpeningPosition(wall, window.position, window.width);
+            const pos = getOpeningPosition(wall, window.position);
             const angle = pos.angle;
 
             return (
