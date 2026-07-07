@@ -107,13 +107,14 @@ const WallCanvas: React.FC<WallCanvasProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center p-8 min-h-full">
-      <h2 className="text-xl font-semibold mb-4 capitalize">{wall} Wall</h2>
-      <div className="text-sm text-gray-600 mb-2">
+      <h2 className="text-xl font-semibold mb-4 capitalize text-ink">{wall} Wall</h2>
+      <div className="text-sm text-ink-muted mb-2">
         {wallWidth} ft × {WALL_HEIGHT} ft
       </div>
+      {/* Wall elevation renders as a light "sheet" on the dark workspace */}
       <div
         ref={canvasRef}
-        className="relative bg-gray-50 border-2 border-gray-300 shadow-lg"
+        className="relative bg-gray-50 rounded-lg shadow-2xl ring-1 ring-black/40"
         style={{
           width: canvasWidth,
           height: canvasHeight,

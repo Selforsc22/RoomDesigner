@@ -59,7 +59,7 @@ const Compass: React.FC<CompassProps> = ({
   return (
     <div
       ref={compassRef}
-      className="relative bg-white rounded-full shadow-lg border-2 border-gray-300"
+      className="relative bg-surface-raised rounded-full shadow-lg border-2 border-line-strong"
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -68,8 +68,8 @@ const Compass: React.FC<CompassProps> = ({
           cx={size / 2}
           cy={size / 2}
           r={size / 2 - 4}
-          fill="white"
-          stroke="#E5E7EB"
+          fill="#2A2D3A"
+          stroke="rgba(255,255,255,0.15)"
           strokeWidth="2"
         />
 
@@ -81,7 +81,7 @@ const Compass: React.FC<CompassProps> = ({
               y1={8}
               x2={size / 2}
               y2={12}
-              stroke="#D1D5DB"
+              stroke="#6B7280"
               strokeWidth="1"
             />
           </g>
@@ -96,7 +96,7 @@ const Compass: React.FC<CompassProps> = ({
             textAnchor="middle"
             fontSize="12"
             fontWeight="bold"
-            fill="#374151"
+            fill="#F9FAFB"
           >
             N
           </text>
@@ -181,7 +181,7 @@ const Compass: React.FC<CompassProps> = ({
 
       {/* Angle display */}
       {editable && (
-        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-gray-600 bg-white px-2 py-1 rounded border border-gray-300 shadow-sm">
+        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-ink-secondary bg-surface-overlay px-2 py-1 rounded border border-line-medium shadow-sm">
           {northAngle.toFixed(0)}°
         </div>
       )}

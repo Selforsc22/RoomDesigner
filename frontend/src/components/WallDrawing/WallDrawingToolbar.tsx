@@ -23,63 +23,39 @@ const WallDrawingToolbar: React.FC<WallDrawingToolbarProps> = ({
   onFinishDrawing,
   isDrawing = false,
 }) => {
+  const modeButton = (m: WallDrawingMode, label: string, title: string, danger = false) => (
+    <button
+      onClick={() => onModeChange(m)}
+      className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+        mode === m
+          ? danger
+            ? 'bg-danger text-ink'
+            : 'bg-accent text-ink'
+          : 'bg-surface-overlay text-ink-secondary hover:bg-surface-hover hover:text-ink'
+      }`}
+      title={title}
+    >
+      {label}
+    </button>
+  );
+
   return (
-    <div className="bg-white border-b border-gray-300 px-4 py-2 shadow-sm">
+    <div className="bg-surface-raised border-b border-line-subtle px-4 py-2 shadow-sm">
       <div className="flex items-center gap-4 flex-wrap">
         {/* Mode Buttons */}
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Wall Tools:</span>
-          <div className="flex gap-1 border border-gray-300 rounded">
-            <button
-              onClick={() => onModeChange('select')}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                mode === 'select'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-              title="Select and move walls"
-            >
-              Select
-            </button>
-            <button
-              onClick={() => onModeChange('draw')}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-300 ${
-                mode === 'draw'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-              title="Draw new walls"
-            >
-              Draw Wall
-            </button>
-            <button
-              onClick={() => onModeChange('edit')}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-300 ${
-                mode === 'edit'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-              title="Edit wall endpoints"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => onModeChange('delete')}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-300 ${
-                mode === 'delete'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-              title="Delete walls"
-            >
-              Delete
-            </button>
+          <span className="text-sm font-medium text-ink-secondary">Wall Tools:</span>
+          <div className="flex rounded-md overflow-hidden border border-line-medium divide-x divide-line-medium">
+            {modeButton('select', 'Select', 'Select and move walls')}
+            {modeButton('draw', 'Draw Wall', 'Draw new walls')}
+            {modeButton('edit', 'Edit', 'Edit wall endpoints')}
+            {modeButton('delete', 'Delete', 'Delete walls', true)}
           </div>
         </div>
 
         {/* Wall Thickness Slider */}
         <div className="flex items-center gap-2">
-          <label htmlFor="wall-thickness" className="text-sm font-medium text-gray-700">
+          <label htmlFor="wall-thickness" className="text-sm font-medium text-ink-secondary">
             Thickness:
           </label>
           <input
@@ -90,41 +66,37 @@ const WallDrawingToolbar: React.FC<WallDrawingToolbarProps> = ({
             step="0.25"
             value={wallThickness}
             onChange={(e) => onWallThicknessChange(parseFloat(e.target.value))}
-            className="w-24"
+            className="slider-matte w-24"
           />
-          <span className="text-sm text-gray-600 min-w-[3rem]">
+          <span className="text-sm text-ink-muted min-w-[3rem]">
             {wallThickness.toFixed(2)} ft
           </span>
         </div>
 
         {/* Snap to Grid Toggle */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="snap-to-grid" className="flex items-center gap-2 cursor-pointer">
-            <input
-              id="snap-to-grid"
-              type="checkbox"
-              checked={snapToGrid}
-              onChange={(e) => onSnapToGridChange(e.target.checked)}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <span className="text-sm font-medium text-gray-700">
-              Snap to Grid
-            </span>
-          </label>
-        </div>
+        <label htmlFor="snap-to-grid" className="flex items-center gap-2 cursor-pointer">
+          <input
+            id="snap-to-grid"
+            type="checkbox"
+            checked={snapToGrid}
+            onChange={(e) => onSnapToGridChange(e.target.checked)}
+            className="w-4 h-4 rounded accent-accent"
+          />
+          <span className="text-sm font-medium text-ink-secondary">Snap to Grid</span>
+        </label>
 
         {/* Finish Drawing Button (only show when drawing) */}
         {isDrawing && onFinishDrawing && (
           <button
             onClick={onFinishDrawing}
-            className="px-4 py-1.5 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 transition-colors"
+            className="btn-glossy btn-glossy-success px-4 py-1.5 text-sm"
           >
             Finish Wall
           </button>
         )}
 
         {/* Instructions */}
-        <div className="ml-auto text-sm text-gray-500 italic">
+        <div className="ml-auto text-sm text-ink-muted italic">
           {mode === 'select' && 'Click to select walls'}
           {mode === 'draw' && 'Click to place wall endpoints'}
           {mode === 'edit' && 'Select a wall, then drag its endpoints'}

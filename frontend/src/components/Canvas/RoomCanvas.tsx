@@ -316,9 +316,11 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
 
   return (
     <div className="flex items-center justify-center p-8 min-h-full">
+      {/* The floor plan is a light "sheet" sitting on the dark workspace
+          (light beams read best against a paper-like floor) */}
       <div
         ref={canvasRef}
-        className="relative bg-gray-50 rounded-lg shadow-2xl ring-1 ring-gray-200"
+        className="relative bg-gray-50 rounded-lg shadow-2xl ring-1 ring-black/40"
         style={{
           width: canvasWidth,
           height: canvasHeight,

@@ -9,6 +9,9 @@ interface SectionManagerProps {
   onDeleteSection: (sectionId: string) => void;
 }
 
+const fieldClass =
+  'w-full px-2 py-1 text-sm bg-surface-hover border border-line-medium rounded text-ink placeholder:text-ink-faint focus:outline-none focus:border-accent transition-colors';
+
 const SectionManager: React.FC<SectionManagerProps> = ({
   sections,
   onUpdateSection,
@@ -47,15 +50,15 @@ const SectionManager: React.FC<SectionManagerProps> = ({
   };
 
   return (
-    <div className="border-t border-gray-200 pt-4">
+    <div className="border-t border-line-subtle pt-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-700">Room Sections</h3>
+        <h3 className="text-sm font-semibold text-ink-secondary">Room Sections</h3>
         <button
           onClick={onAddSection}
-          className="p-1 hover:bg-gray-100 rounded transition-colors"
+          className="p-1 hover:bg-surface-hover rounded transition-colors"
           title="Add Section"
         >
-          <Plus className="w-4 h-4 text-primary" />
+          <Plus className="w-4 h-4 text-accent" />
         </button>
       </div>
 
@@ -66,7 +69,7 @@ const SectionManager: React.FC<SectionManagerProps> = ({
           return (
             <div
               key={section.id}
-              className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+              className="bg-surface-overlay rounded-lg p-3 border border-line-subtle"
             >
               {isEditing ? (
                 // Edit mode
@@ -75,13 +78,13 @@ const SectionManager: React.FC<SectionManagerProps> = ({
                     type="text"
                     value={editValues.name || ''}
                     onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    className={fieldClass}
                     placeholder="Section name"
                   />
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-gray-600">Width (ft)</label>
+                      <label className="text-xs text-ink-muted">Width (ft)</label>
                       <input
                         type="number"
                         min="4"
@@ -91,11 +94,11 @@ const SectionManager: React.FC<SectionManagerProps> = ({
                         onChange={(e) =>
                           setEditValues({ ...editValues, width: parseFloat(e.target.value) })
                         }
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                        className={fieldClass}
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-600">Height (ft)</label>
+                      <label className="text-xs text-ink-muted">Height (ft)</label>
                       <input
                         type="number"
                         min="4"
@@ -105,14 +108,14 @@ const SectionManager: React.FC<SectionManagerProps> = ({
                         onChange={(e) =>
                           setEditValues({ ...editValues, height: parseFloat(e.target.value) })
                         }
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                        className={fieldClass}
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-gray-600">X Position</label>
+                      <label className="text-xs text-ink-muted">X Position</label>
                       <input
                         type="number"
                         min="0"
@@ -121,11 +124,11 @@ const SectionManager: React.FC<SectionManagerProps> = ({
                         onChange={(e) =>
                           setEditValues({ ...editValues, x: parseFloat(e.target.value) })
                         }
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                        className={fieldClass}
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-600">Y Position</label>
+                      <label className="text-xs text-ink-muted">Y Position</label>
                       <input
                         type="number"
                         min="0"
@@ -134,7 +137,7 @@ const SectionManager: React.FC<SectionManagerProps> = ({
                         onChange={(e) =>
                           setEditValues({ ...editValues, y: parseFloat(e.target.value) })
                         }
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                        className={fieldClass}
                       />
                     </div>
                   </div>
@@ -142,14 +145,14 @@ const SectionManager: React.FC<SectionManagerProps> = ({
                   <div className="flex gap-2 pt-1">
                     <button
                       onClick={saveEditing}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-primary text-white text-xs rounded hover:bg-primary/90 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-accent text-ink text-xs rounded hover:bg-accent-hover transition-colors"
                     >
                       <Check className="w-3 h-3" />
                       Save
                     </button>
                     <button
                       onClick={cancelEditing}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-surface-hover text-ink-secondary text-xs rounded hover:bg-surface-elevated transition-colors"
                     >
                       <X className="w-3 h-3" />
                       Cancel
@@ -161,23 +164,23 @@ const SectionManager: React.FC<SectionManagerProps> = ({
                 <div>
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <div className="font-medium text-sm text-gray-900">
+                      <div className="font-medium text-sm text-ink">
                         {section.name || `Section ${index + 1}`}
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5">
+                      <div className="text-xs text-ink-muted mt-0.5">
                         {section.width}' × {section.height}'
                       </div>
-                      <div className="text-xs text-gray-400 mt-0.5">
+                      <div className="text-xs text-ink-faint mt-0.5">
                         Position: ({section.x}, {section.y})
                       </div>
                     </div>
                     <div className="flex gap-1">
                       <button
                         onClick={() => startEditing(section)}
-                        className="p-1 hover:bg-gray-200 rounded transition-colors"
+                        className="p-1 hover:bg-surface-hover rounded transition-colors"
                         title="Edit Section"
                       >
-                        <Edit2 className="w-3 h-3 text-gray-600" />
+                        <Edit2 className="w-3 h-3 text-ink-secondary" />
                       </button>
                       <button
                         onClick={() => {
@@ -185,10 +188,10 @@ const SectionManager: React.FC<SectionManagerProps> = ({
                             onDeleteSection(section.id);
                           }
                         }}
-                        className="p-1 hover:bg-red-100 rounded transition-colors"
+                        className="p-1 hover:bg-danger/15 rounded transition-colors"
                         title="Delete Section"
                       >
-                        <Trash2 className="w-3 h-3 text-red-600" />
+                        <Trash2 className="w-3 h-3 text-danger" />
                       </button>
                     </div>
                   </div>
@@ -199,7 +202,7 @@ const SectionManager: React.FC<SectionManagerProps> = ({
         })}
       </div>
 
-      <div className="mt-3 text-xs text-gray-500 px-1">
+      <div className="mt-3 text-xs text-ink-muted px-1">
         {sections.length} section{sections.length !== 1 ? 's' : ''}
       </div>
     </div>

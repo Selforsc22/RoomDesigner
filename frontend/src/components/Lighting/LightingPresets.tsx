@@ -21,30 +21,10 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
   }, {} as Record<string, LightingPreset[]>);
 
   const categoryInfo = {
-    portrait: {
-      label: 'Portrait',
-      icon: 'User',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-    },
-    product: {
-      label: 'Product',
-      icon: 'Package',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    video: {
-      label: 'Video',
-      icon: 'Video',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    general: {
-      label: 'General',
-      icon: 'Lightbulb',
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
-    },
+    portrait: { label: 'Portrait', icon: 'User', color: 'text-purple-400' },
+    product: { label: 'Product', icon: 'Package', color: 'text-blue-400' },
+    video: { label: 'Video', icon: 'Video', color: 'text-success' },
+    general: { label: 'General', icon: 'Lightbulb', color: 'text-warning' },
   };
 
   const handleApplyPreset = (preset: LightingPreset) => {
@@ -58,13 +38,13 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
   };
 
   return (
-    <div className="p-4 border-b border-gray-100">
+    <div className="p-4 border-b border-line-subtle">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-bold text-gray-800 text-xs uppercase tracking-wider">Lighting Presets</h2>
-        <LucideIcons.Sparkles className="w-4 h-4 text-yellow-500" />
+        <h2 className="font-bold text-ink text-xs uppercase tracking-wider">Lighting Presets</h2>
+        <LucideIcons.Sparkles className="w-4 h-4 text-warning" />
       </div>
 
-      <p className="text-xs text-gray-500 mb-3">
+      <p className="text-xs text-ink-muted mb-3">
         Apply professional lighting setups instantly
       </p>
 
@@ -74,29 +54,29 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
           const isExpanded = expandedCategory === category;
 
           return (
-            <div key={category} className="border border-gray-200 rounded-lg overflow-hidden">
+            <div key={category} className="border border-line-subtle rounded-lg overflow-hidden">
               {/* Category Header */}
               <button
                 onClick={() => setExpandedCategory(isExpanded ? null : category)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 ${info.bgColor} hover:opacity-80 transition-all`}
+                className="w-full flex items-center justify-between px-3 py-2.5 bg-surface-overlay hover:bg-surface-hover transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <span className={info.color}>
                     {getCategoryIcon(info.icon)}
                   </span>
-                  <span className="text-sm font-semibold text-gray-800">{info.label}</span>
-                  <span className="text-xs text-gray-500">({presets.length})</span>
+                  <span className="text-sm font-semibold text-ink">{info.label}</span>
+                  <span className="text-xs text-ink-muted">({presets.length})</span>
                 </div>
                 {isExpanded ? (
-                  <LucideIcons.ChevronDown className="w-4 h-4 text-gray-600" />
+                  <LucideIcons.ChevronDown className="w-4 h-4 text-ink-muted" />
                 ) : (
-                  <LucideIcons.ChevronRight className="w-4 h-4 text-gray-600" />
+                  <LucideIcons.ChevronRight className="w-4 h-4 text-ink-muted" />
                 )}
               </button>
 
               {/* Presets List */}
               {isExpanded && (
-                <div className="bg-white p-2 space-y-1">
+                <div className="bg-surface-raised p-2 space-y-1">
                   {presets.map((preset) => {
                     const isSelected = selectedPreset === preset.id;
                     return (
@@ -105,25 +85,25 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
                         onClick={() => handleApplyPreset(preset)}
                         className={`w-full text-left p-3 rounded-lg border transition-all ${
                           isSelected
-                            ? 'border-primary bg-blue-50 shadow-sm'
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            ? 'border-accent bg-accent/15 shadow-sm'
+                            : 'border-line-subtle hover:border-line-medium hover:bg-surface-hover'
                         }`}
                         title={`${preset.lights.length} lights - ${preset.description}`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="text-sm font-semibold text-gray-900 truncate">
+                              <h3 className="text-sm font-semibold text-ink truncate">
                                 {preset.name}
                               </h3>
                               {isSelected && (
-                                <LucideIcons.Check className="w-4 h-4 text-primary flex-shrink-0" />
+                                <LucideIcons.Check className="w-4 h-4 text-accent flex-shrink-0" />
                               )}
                             </div>
-                            <p className="text-xs text-gray-600 line-clamp-2 mb-1">
+                            <p className="text-xs text-ink-secondary line-clamp-2 mb-1">
                               {preset.description}
                             </p>
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <div className="flex items-center gap-2 text-xs text-ink-muted">
                               <div className="flex items-center gap-1">
                                 <LucideIcons.Lightbulb className="w-3 h-3" />
                                 <span>{preset.lights.length} lights</span>
@@ -141,11 +121,11 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
         })}
       </div>
 
-      <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+      <div className="mt-3 p-3 bg-warning/10 border border-warning/30 rounded-lg">
         <div className="flex items-start gap-2">
-          <LucideIcons.Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-800">
-            <p className="font-medium mb-1">Pro Tip</p>
+          <LucideIcons.Info className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+          <div className="text-xs text-ink-secondary">
+            <p className="font-medium text-ink mb-1">Pro Tip</p>
             <p>Presets will replace all existing lights in your design. Save your work first!</p>
           </div>
         </div>
