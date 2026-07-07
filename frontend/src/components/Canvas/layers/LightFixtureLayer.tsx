@@ -50,6 +50,15 @@ const LightFixtureLayer: React.FC<LightFixtureLayerProps> = React.memo(
       const handleUp = () => {
         setRotatingId(null);
         rotateCenterRef.current = null;
+        // The browser fires a click on the common ancestor of mousedown/up
+        // targets — here that's the canvas, which would deselect the light
+        // the instant aiming ends. Swallow that one click.
+        const swallowClick = (ev: MouseEvent) => ev.stopPropagation();
+        window.addEventListener('click', swallowClick, { capture: true, once: true });
+        setTimeout(
+          () => window.removeEventListener('click', swallowClick, { capture: true }),
+          0
+        );
       };
 
       window.addEventListener('mousemove', handleMove);

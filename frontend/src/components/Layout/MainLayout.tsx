@@ -562,10 +562,12 @@ const MainLayout: React.FC = () => {
       />
 
       {/* Main Canvas Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* min-w-0 lets this column shrink below its content width; without it
+          the toolbar forces the column under the properties panel */}
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="toolbar-matte px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+        <div className="toolbar-matte px-6 py-4 flex items-center justify-between flex-wrap gap-y-2">
+          <div className="flex items-center gap-6 flex-wrap gap-y-2">
             <input
               type="text"
               value={currentDesign.name}
