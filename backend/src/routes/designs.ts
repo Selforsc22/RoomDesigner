@@ -42,6 +42,9 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
       userId: req.userId,
       name: req.body.name || 'Untitled Design',
       roomDimensions: req.body.roomDimensions || { width: 15, height: 12 },
+      roomSections: req.body.roomSections,
+      floorPlan: req.body.floorPlan,
+      northAngle: req.body.northAngle,
       furniture: req.body.furniture || [],
       wallObjects: req.body.wallObjects || [],
       doors: req.body.doors || [],
@@ -68,6 +71,9 @@ router.put('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
     // Update fields
     if (req.body.name !== undefined) design.name = req.body.name;
     if (req.body.roomDimensions !== undefined) design.roomDimensions = req.body.roomDimensions;
+    if (req.body.roomSections !== undefined) design.roomSections = req.body.roomSections;
+    if (req.body.floorPlan !== undefined) design.floorPlan = req.body.floorPlan;
+    if (req.body.northAngle !== undefined) design.northAngle = req.body.northAngle;
     if (req.body.furniture !== undefined) design.furniture = req.body.furniture;
     if (req.body.wallObjects !== undefined) design.wallObjects = req.body.wallObjects;
     if (req.body.doors !== undefined) design.doors = req.body.doors;
