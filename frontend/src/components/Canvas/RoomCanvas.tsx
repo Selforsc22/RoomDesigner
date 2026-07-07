@@ -708,6 +708,7 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
           draggingItemId={draggingItem}
           onMouseDown={handleMouseDown}
           onHoverChange={setHoveredItemId}
+          onRotate={(id, direction) => onUpdateFurniture(id, { lightDirection: direction })}
         />
 
         {/* Ambient color cast from active lights */}
