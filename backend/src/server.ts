@@ -26,8 +26,23 @@ const limiter = rateLimit({
 });
 
 // Middleware
+// FRONTEND_URL accepts a comma-separated list so production + Vercel
+// preview URLs can both be allowed, e.g.
+//   FRONTEND_URL=https://myapp.vercel.app,https://myapp-git-branch.vercel.app
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Non-browser requests (curl, health checks) have no Origin header
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    console.warn(`CORS rejected origin: ${origin} (allowed: ${allowedOrigins.join(', ')})`);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
