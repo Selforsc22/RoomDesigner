@@ -1,8 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
-import type { FurnitureItem, Door, Window as WindowType, RoomSection } from '../../types';
+import type { FurnitureItem, Door, Window as WindowType, RoomSection, FloorPlan, Wall } from '../../types';
 import LightBeamLayer from './layers/LightBeamLayer';
 import LightFixtureLayer from './layers/LightFixtureLayer';
 import AmbientLightLayer from './layers/AmbientLightLayer';
+import WallRenderer from '../WallDrawing/WallRenderer';
+import type { WallDrawingMode } from '../WallDrawing/WallDrawingToolbar';
+import { isPointInFloorPlan } from '../../utils/wallGeometry';
 import { Z } from '../../constants/layers';
 
 interface RoomCanvasProps {
@@ -17,6 +20,20 @@ interface RoomCanvasProps {
   onUpdateFurniture: (id: string, updates: Partial<FurnitureItem>) => void;
   onUpdateRoomSection?: (sectionId: string, updates: Partial<RoomSection>) => void;
   zoom?: number;
+  // Custom-walls mode
+  floorPlan?: FloorPlan | null;
+  wallDrawingMode?: WallDrawingMode;
+  wallThickness?: number;
+  wallSnapToGrid?: boolean;
+  selectedWallId?: string | null;
+  onSelectWall?: (id: string | null) => void;
+  onAddWall?: (wall: Omit<Wall, 'id'>) => void;
+  onUpdateWall?: (id: string, updates: Partial<Wall>) => void;
+  onDeleteWall?: (id: string) => void;
+  openingPlacement?: 'door' | 'window' | null;
+  onPlaceOpening?: (type: 'door' | 'window', wallId: string, position: number) => void;
+  onDrawingStateChange?: (isDrawing: boolean) => void;
+  finishRequestId?: number;
 }
 
 const BASE_SCALE = 20; // pixels per foot
@@ -33,6 +50,19 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
   onUpdateFurniture,
   onUpdateRoomSection,
   zoom = 1,
+  floorPlan = null,
+  wallDrawingMode = 'select',
+  wallThickness = 0.5,
+  wallSnapToGrid = true,
+  selectedWallId = null,
+  onSelectWall,
+  onAddWall,
+  onUpdateWall,
+  onDeleteWall,
+  openingPlacement = null,
+  onPlaceOpening,
+  onDrawingStateChange,
+  finishRequestId,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [draggingItem, setDraggingItem] = useState<string | null>(null);
@@ -56,6 +86,14 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
 
   // Helper: Check if furniture fits within any section (or room if no sections)
   const constrainToValidArea = (x: number, y: number, width: number, height: number): { x: number; y: number } => {
+    // Custom-walls mode: the item's center must stay inside the floor plan.
+    // Invalid positions are rejected by the caller (item stops at the wall).
+    if (floorPlan && floorPlan.walls.length >= 3) {
+      const constrainedX = Math.max(0, Math.min(roomDimensions.width - width, x));
+      const constrainedY = Math.max(0, Math.min(roomDimensions.height - height, y));
+      return { x: constrainedX, y: constrainedY };
+    }
+
     if (!roomSections || roomSections.length === 0) {
       // Single room - constrain to room boundaries
       const constrainedX = Math.max(0, Math.min(roomDimensions.width - width, x));
@@ -131,6 +169,15 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
 
     // Constrain to valid area (room or section boundaries)
     const constrained = constrainToValidArea(newX, newY, effectiveWidth, effectiveHeight);
+
+    // Custom-walls mode: reject moves whose center leaves the floor plan
+    if (floorPlan && floorPlan.walls.length >= 3) {
+      const center = {
+        x: constrained.x + effectiveWidth / 2,
+        y: constrained.y + effectiveHeight / 2,
+      };
+      if (!isPointInFloorPlan(center, floorPlan)) return;
+    }
 
     onUpdateFurniture(draggingItem, { x: constrained.x, y: constrained.y });
   };
@@ -692,6 +739,30 @@ const RoomCanvas: React.FC<RoomCanvasProps> = ({
             </div>
           );
         })}
+
+        {/* Custom walls with door/window openings */}
+        {floorPlan && onSelectWall && onAddWall && onUpdateWall && onDeleteWall && onPlaceOpening && (
+          <WallRenderer
+            floorPlan={floorPlan}
+            doors={doors}
+            windows={windows}
+            scale={SCALE}
+            mode={wallDrawingMode}
+            wallThickness={wallThickness}
+            snapToGridEnabled={wallSnapToGrid}
+            selectedWallId={selectedWallId}
+            onSelectWall={onSelectWall}
+            onUpdateWall={onUpdateWall}
+            onDeleteWall={onDeleteWall}
+            onAddWall={onAddWall}
+            openingPlacement={openingPlacement}
+            onPlaceOpening={onPlaceOpening}
+            selectedItemId={selectedItemId}
+            onSelectOpening={(id) => onSelectItem(id)}
+            onDrawingStateChange={onDrawingStateChange}
+            finishRequestId={finishRequestId}
+          />
+        )}
 
         {/* Light beams — geometry and falloff from utils/lighting */}
         <LightBeamLayer

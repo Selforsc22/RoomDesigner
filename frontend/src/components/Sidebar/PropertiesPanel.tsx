@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { kelvinToRGB } from '../../utils/lighting';
+import { calculateWallLength } from '../../utils/wallGeometry';
+import type { Wall } from '../../types';
 
 interface PropertiesPanelProps {
   selectedItem: { type: string; item: any } | null;
   onUpdate: (updates: any) => void;
   onDelete: () => void;
+  walls?: Wall[];
 }
 
 const inputClass =
@@ -31,6 +34,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   selectedItem,
   onUpdate,
   onDelete,
+  walls,
 }) => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -61,6 +65,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   }
 
   const { type, item } = selectedItem;
+  const isWallOpening =
+    (type === 'door' || type === 'window') && item.wallId !== undefined;
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -148,7 +154,50 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             </div>
           </div>
 
-          {/* Position */}
+          {/* Wall-mode opening controls (doors/windows on custom walls) */}
+          {isWallOpening && walls && walls.length > 0 && (
+            <>
+              <div>
+                <label className={labelClass}>Wall</label>
+                <select
+                  value={item.wallId || ''}
+                  onChange={(e) => onUpdate({ wallId: e.target.value, position: 0.5 })}
+                  className={inputClass}
+                >
+                  {walls.map((wall, idx) => (
+                    <option key={wall.id} value={wall.id}>
+                      Wall {idx + 1} ({calculateWallLength(wall).toFixed(1)} ft)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={labelClass}>Position Along Wall</label>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={item.position ?? 0.5}
+                    onChange={(e) => onUpdate({ position: parseFloat(e.target.value) })}
+                    className="slider-matte"
+                  />
+                  <div className="flex justify-between text-xs text-ink-muted">
+                    <span>Start</span>
+                    <span className="font-medium text-ink">
+                      {Math.round((item.position ?? 0.5) * 100)}%
+                    </span>
+                    <span>End</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Position (not meaningful for wall-mode openings) */}
+          {!isWallOpening && (
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelClass} title="Horizontal position from left edge of room">
@@ -175,6 +224,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               />
             </div>
           </div>
+          )}
 
           {/* Color (for furniture) */}
           {type === 'furniture' && (

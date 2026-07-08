@@ -329,3 +329,86 @@ export function snapToWallEndpoint(
 export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
+
+// Project a point onto a wall's centerline. Returns the normalized position
+// along the wall (0-1) and the perpendicular distance in feet.
+export function projectPointOntoWall(
+  point: { x: number; y: number },
+  wall: Wall
+): { t: number; distance: number } {
+  const dx = wall.endX - wall.startX;
+  const dy = wall.endY - wall.startY;
+  const lengthSq = dx * dx + dy * dy;
+  if (lengthSq === 0) return { t: 0, distance: Infinity };
+
+  const t = Math.max(
+    0,
+    Math.min(1, ((point.x - wall.startX) * dx + (point.y - wall.startY) * dy) / lengthSq)
+  );
+  const projX = wall.startX + t * dx;
+  const projY = wall.startY + t * dy;
+  const distance = Math.sqrt((point.x - projX) ** 2 + (point.y - projY) ** 2);
+
+  return { t, distance };
+}
+
+// Find the wall nearest to a point (within maxDistance feet), with the
+// clamped opening position so an opening of `openingWidth` fits on it.
+export function findNearestWallForOpening(
+  point: { x: number; y: number },
+  walls: Wall[],
+  openingWidth: number,
+  maxDistance: number = 1.5
+): { wall: Wall; position: number } | null {
+  let best: { wall: Wall; position: number; distance: number } | null = null;
+
+  for (const wall of walls) {
+    const length = calculateWallLength(wall);
+    if (length < openingWidth) continue; // opening can't fit at all
+
+    const { t, distance } = projectPointOntoWall(point, wall);
+    if (distance > maxDistance) continue;
+
+    // Clamp so the opening stays fully on the wall
+    const halfT = openingWidth / 2 / length;
+    const position = Math.max(halfT, Math.min(1 - halfT, t));
+
+    if (!best || distance < best.distance) {
+      best = { wall, position, distance };
+    }
+  }
+
+  return best ? { wall: best.wall, position: best.position } : null;
+}
+
+// Normalized [start, end] range an opening occupies on a wall
+export function openingRangeOnWall(
+  wall: Wall,
+  position: number,
+  width: number
+): { startPos: number; endPos: number } {
+  const length = calculateWallLength(wall);
+  const halfT = width / 2 / Math.max(length, 0.001);
+  return {
+    startPos: Math.max(0, position - halfT),
+    endPos: Math.min(1, position + halfT),
+  };
+}
+
+// Would an opening at (position, width) overlap any existing opening on the
+// wall? Returns the id of the first conflicting opening, or null.
+export function findOpeningConflict(
+  wall: Wall,
+  position: number,
+  width: number,
+  existing: Array<{ id: string; position: number; width: number }>
+): string | null {
+  const candidate = openingRangeOnWall(wall, position, width);
+  for (const other of existing) {
+    const range = openingRangeOnWall(wall, other.position, other.width);
+    if (candidate.startPos < range.endPos && candidate.endPos > range.startPos) {
+      return other.id;
+    }
+  }
+  return null;
+}

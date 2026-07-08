@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import type { Design, ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType, RoomSection } from '../../types';
+import type { Design, ViewMode, WallType, FurnitureItem, WallObject, Door, Window as WindowType, RoomSection, Wall } from '../../types';
 import { designAPI } from '../../services/api';
 import type { LightingPreset } from '../../config/lightingPresets';
 import LeftSidebar from '../Sidebar/LeftSidebar';
@@ -13,6 +13,15 @@ import { getRoomDimensions } from '../../utils/design';
 import KeyboardShortcuts from '../Help/KeyboardShortcuts';
 import ExportDialog from '../Export/ExportDialog';
 import { Z } from '../../constants/layers';
+import WallDrawingToolbar, { type WallDrawingMode } from '../WallDrawing/WallDrawingToolbar';
+import { DEFAULT_DOOR_WIDTH, DEFAULT_WINDOW_WIDTH } from '../WallDrawing/WallRenderer';
+import Compass from '../Canvas/Compass';
+import {
+  convertRectangleToWalls,
+  convertLegacyDoorToWallMode,
+  convertLegacyWindowToWallMode,
+  calculateFloorPlanBounds,
+} from '../../utils/wallGeometry';
 
 const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -31,6 +40,15 @@ const MainLayout: React.FC = () => {
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  // Custom-walls mode state
+  const [wallDrawingMode, setWallDrawingMode] = useState<WallDrawingMode>('select');
+  const [wallThickness, setWallThickness] = useState(0.5);
+  const [wallSnapToGrid, setWallSnapToGrid] = useState(true);
+  const [selectedWallId, setSelectedWallId] = useState<string | null>(null);
+  const [openingPlacement, setOpeningPlacement] = useState<'door' | 'window' | null>(null);
+  const [isDrawingWall, setIsDrawingWall] = useState(false);
+  const [finishRequestId, setFinishRequestId] = useState(0);
+  const [showConvertDialog, setShowConvertDialog] = useState(false);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   // Load designs on mount
@@ -305,6 +323,10 @@ const MainLayout: React.FC = () => {
           deleteFurniture(selected.item.id);
         } else if (selected.type === 'wallObject') {
           deleteWallObject(selected.item.id);
+        } else if (selected.type === 'door') {
+          deleteDoor(selected.item.id);
+        } else if (selected.type === 'window') {
+          deleteWindow(selected.item.id);
         }
       }
 
@@ -314,9 +336,13 @@ const MainLayout: React.FC = () => {
         duplicateSelectedItem();
       }
 
-      // Escape: Deselect
+      // Escape: cancel opening placement first, otherwise deselect
       if (e.key === 'Escape') {
-        setSelectedItemId(null);
+        if (openingPlacement) {
+          setOpeningPlacement(null);
+        } else {
+          setSelectedItemId(null);
+        }
       }
 
       // G: Toggle grid
@@ -350,7 +376,7 @@ const MainLayout: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedItemId, currentDesign, historyIndex, history, showGrid, viewMode]);
+  }, [selectedItemId, currentDesign, historyIndex, history, showGrid, viewMode, openingPlacement]);
 
   const duplicateSelectedItem = () => {
     if (!currentDesign || !selectedItemId) return;
@@ -461,6 +487,11 @@ const MainLayout: React.FC = () => {
 
   const addDoor = (door: Door) => {
     if (!currentDesign) return;
+    // In custom-walls mode, adding a door enters click-to-place mode instead
+    if (currentDesign.floorPlan) {
+      setOpeningPlacement('door');
+      return;
+    }
     setCurrentDesign({
       ...currentDesign,
       doors: [...currentDesign.doors, door],
@@ -470,11 +501,179 @@ const MainLayout: React.FC = () => {
 
   const addWindow = (window: WindowType) => {
     if (!currentDesign) return;
+    if (currentDesign.floorPlan) {
+      setOpeningPlacement('window');
+      return;
+    }
     setCurrentDesign({
       ...currentDesign,
       windows: [...currentDesign.windows, window],
     });
     setSelectedItemId(window.id);
+  };
+
+  const placeOpening = (type: 'door' | 'window', wallId: string, position: number) => {
+    if (!currentDesign) return;
+    const id = `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    if (type === 'door') {
+      setCurrentDesign({
+        ...currentDesign,
+        doors: [...currentDesign.doors, { id, wallId, position, width: DEFAULT_DOOR_WIDTH }],
+      });
+    } else {
+      setCurrentDesign({
+        ...currentDesign,
+        windows: [
+          ...currentDesign.windows,
+          { id, wallId, position, width: DEFAULT_WINDOW_WIDTH, height: 3, heightFromFloor: 3 },
+        ],
+      });
+    }
+    setOpeningPlacement(null);
+    setSelectedItemId(id);
+  };
+
+  const updateDoor = (id: string, updates: Partial<Door>) => {
+    if (!currentDesign) return;
+    setCurrentDesign({
+      ...currentDesign,
+      doors: currentDesign.doors.map((d) => (d.id === id ? { ...d, ...updates } : d)),
+    });
+  };
+
+  const updateWindow = (id: string, updates: Partial<WindowType>) => {
+    if (!currentDesign) return;
+    setCurrentDesign({
+      ...currentDesign,
+      windows: currentDesign.windows.map((w) => (w.id === id ? { ...w, ...updates } : w)),
+    });
+  };
+
+  const deleteDoor = (id: string) => {
+    if (!currentDesign) return;
+    setCurrentDesign({
+      ...currentDesign,
+      doors: currentDesign.doors.filter((d) => d.id !== id),
+    });
+    setSelectedItemId(null);
+  };
+
+  const deleteWindow = (id: string) => {
+    if (!currentDesign) return;
+    setCurrentDesign({
+      ...currentDesign,
+      windows: currentDesign.windows.filter((w) => w.id !== id),
+    });
+    setSelectedItemId(null);
+  };
+
+  // --- Custom walls -------------------------------------------------------
+
+  const addWall = (wall: Omit<Wall, 'id'>) => {
+    if (!currentDesign?.floorPlan) return;
+    const newWall: Wall = {
+      ...wall,
+      id: `wall-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    };
+    const walls = [...currentDesign.floorPlan.walls, newWall];
+    setCurrentDesign({
+      ...currentDesign,
+      floorPlan: {
+        ...currentDesign.floorPlan,
+        walls,
+        bounds: calculateFloorPlanBounds(walls),
+      },
+    });
+  };
+
+  const updateWall = (id: string, updates: Partial<Wall>) => {
+    if (!currentDesign?.floorPlan) return;
+    const walls = currentDesign.floorPlan.walls.map((w) =>
+      w.id === id ? { ...w, ...updates } : w
+    );
+    setCurrentDesign({
+      ...currentDesign,
+      floorPlan: {
+        ...currentDesign.floorPlan,
+        walls,
+        bounds: calculateFloorPlanBounds(walls),
+      },
+    });
+  };
+
+  const deleteWall = (id: string) => {
+    if (!currentDesign?.floorPlan) return;
+    const walls = currentDesign.floorPlan.walls.filter((w) => w.id !== id);
+    setCurrentDesign({
+      ...currentDesign,
+      floorPlan: {
+        ...currentDesign.floorPlan,
+        walls,
+        bounds: calculateFloorPlanBounds(walls),
+      },
+      // Openings on a deleted wall go with it
+      doors: currentDesign.doors.filter((d) => d.wallId !== id),
+      windows: currentDesign.windows.filter((w) => w.wallId !== id),
+    });
+    if (selectedWallId === id) setSelectedWallId(null);
+  };
+
+  const enterCustomWalls = async (asCopy: boolean) => {
+    if (!currentDesign) return;
+    const dims = getRoomDimensions(currentDesign);
+    const floorPlan = convertRectangleToWalls(dims, wallThickness);
+    const doors = currentDesign.doors.map((d) => convertLegacyDoorToWallMode(d, dims));
+    const windows = currentDesign.windows.map((w) => convertLegacyWindowToWallMode(w, dims));
+    const patch = {
+      floorPlan,
+      doors,
+      windows,
+      roomDimensions: dims,
+      roomSections: undefined,
+    };
+
+    setShowConvertDialog(false);
+    setWallDrawingMode('select');
+
+    if (asCopy) {
+      try {
+        const copy = await designAPI.create({
+          name: `${currentDesign.name} (walls)`,
+          furniture: currentDesign.furniture,
+          wallObjects: currentDesign.wallObjects,
+          ...patch,
+        });
+        setDesigns((prev) => [copy, ...prev]);
+        setCurrentDesign(copy);
+      } catch (error) {
+        console.error('Failed to create walls copy:', error);
+        alert('Could not create a copy. Please try again.');
+      }
+    } else {
+      setCurrentDesign({ ...currentDesign, ...patch });
+    }
+  };
+
+  const exitCustomWalls = () => {
+    if (!currentDesign?.floorPlan) return;
+    const bounds = currentDesign.floorPlan.bounds;
+    const confirmed = window.confirm(
+      'Leave Custom Walls mode? Walls and wall-placed doors/windows will be removed.'
+    );
+    if (!confirmed) return;
+    setCurrentDesign({
+      ...currentDesign,
+      floorPlan: undefined,
+      roomDimensions: {
+        width: Math.max(8, Math.ceil(bounds.maxX)),
+        height: Math.max(8, Math.ceil(bounds.maxY)),
+      },
+      doors: currentDesign.doors.filter((d) => d.wall !== undefined && d.x !== undefined),
+      windows: currentDesign.windows.filter((w) => w.wall !== undefined && w.x !== undefined),
+    });
+    setSelectedWallId(null);
+    setOpeningPlacement(null);
   };
 
   const addWallObject = (wallObject: WallObject) => {
@@ -532,6 +731,7 @@ const MainLayout: React.FC = () => {
   }
 
   const roomDims = getRoomDimensions(currentDesign);
+  const isCustomWalls = !!currentDesign.floorPlan;
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface-base">
@@ -579,7 +779,52 @@ const MainLayout: React.FC = () => {
             />
             {viewMode === 'room' && (
               <>
-                {/* Room Template Selector */}
+                {/* Room mode switcher: Simple / Sections / Custom Walls */}
+                <div className="flex rounded-md overflow-hidden border border-line-medium divide-x divide-line-medium" title="Room mode">
+                  <button
+                    onClick={() => {
+                      if (isCustomWalls) exitCustomWalls();
+                      else if (currentDesign.roomSections) applyRoomTemplate('simple');
+                    }}
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                      !isCustomWalls && !currentDesign.roomSections
+                        ? 'bg-accent text-ink'
+                        : 'bg-surface-overlay text-ink-secondary hover:bg-surface-hover'
+                    }`}
+                  >
+                    Simple
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (isCustomWalls) {
+                        exitCustomWalls();
+                      }
+                      setShowTemplateDropdown(true);
+                    }}
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                      !isCustomWalls && currentDesign.roomSections
+                        ? 'bg-accent text-ink'
+                        : 'bg-surface-overlay text-ink-secondary hover:bg-surface-hover'
+                    }`}
+                  >
+                    Sections
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!isCustomWalls) setShowConvertDialog(true);
+                    }}
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                      isCustomWalls
+                        ? 'bg-accent text-ink'
+                        : 'bg-surface-overlay text-ink-secondary hover:bg-surface-hover'
+                    }`}
+                  >
+                    Custom Walls
+                  </button>
+                </div>
+
+                {/* Room Template Selector (rectangle modes only) */}
+                {!isCustomWalls && (
                 <div className="relative">
                   <button
                     onClick={() => setShowTemplateDropdown(!showTemplateDropdown)}
@@ -616,9 +861,10 @@ const MainLayout: React.FC = () => {
                     </>
                   )}
                 </div>
+                )}
 
                 {/* Width/Height controls - only show for simple room */}
-                {!currentDesign.roomSections && (
+                {!isCustomWalls && !currentDesign.roomSections && (
                   <>
                     <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-overlay">
                       <label className="text-sm font-medium text-ink-secondary">Width:</label>
@@ -781,8 +1027,27 @@ const MainLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* Canvas workspace: dark surround, the canvas itself is a light sheet */}
-        <div ref={canvasContainerRef} className="flex-1 overflow-auto scrollbar-matte bg-gradient-to-br from-surface-base to-[#191b21]">
+        {/* Wall drawing toolbar (custom-walls mode only) */}
+        {viewMode === 'room' && isCustomWalls && (
+          <WallDrawingToolbar
+            mode={wallDrawingMode}
+            onModeChange={(m) => {
+              setWallDrawingMode(m);
+              setOpeningPlacement(null);
+            }}
+            wallThickness={wallThickness}
+            onWallThicknessChange={setWallThickness}
+            snapToGrid={wallSnapToGrid}
+            onSnapToGridChange={setWallSnapToGrid}
+            isDrawing={isDrawingWall}
+            onFinishDrawing={() => setFinishRequestId((n) => n + 1)}
+          />
+        )}
+
+        {/* Canvas workspace: dark surround, the canvas itself is a light sheet.
+            The ref wraps compass + canvas so exports include both. */}
+        <div ref={canvasContainerRef} className="relative flex-1 min-h-0">
+          <div className="h-full overflow-auto scrollbar-matte bg-gradient-to-br from-surface-base to-[#191b21]">
           {viewMode === 'room' ? (
             <RoomCanvas
               roomDimensions={roomDims}
@@ -796,6 +1061,19 @@ const MainLayout: React.FC = () => {
               onUpdateFurniture={updateFurniture}
               onUpdateRoomSection={updateRoomSection}
               zoom={zoom}
+              floorPlan={currentDesign.floorPlan ?? null}
+              wallDrawingMode={wallDrawingMode}
+              wallThickness={wallThickness}
+              wallSnapToGrid={wallSnapToGrid}
+              selectedWallId={selectedWallId}
+              onSelectWall={setSelectedWallId}
+              onAddWall={addWall}
+              onUpdateWall={updateWall}
+              onDeleteWall={deleteWall}
+              openingPlacement={openingPlacement}
+              onPlaceOpening={placeOpening}
+              onDrawingStateChange={setIsDrawingWall}
+              finishRequestId={finishRequestId}
             />
           ) : (
             <WallCanvas
@@ -814,12 +1092,39 @@ const MainLayout: React.FC = () => {
               onUpdateWallObject={updateWallObject}
             />
           )}
+          </div>
+
+          {/* Compass (exported with the canvas) */}
+          {viewMode === 'room' && (
+            <div className="absolute top-4 right-4" style={{ zIndex: Z.OVERLAY_UI }}>
+              <Compass
+                northAngle={currentDesign.northAngle || 0}
+                onAngleChange={(angle) =>
+                  setCurrentDesign({ ...currentDesign, northAngle: angle })
+                }
+                editable
+                size={80}
+              />
+            </div>
+          )}
+
+          {/* Opening placement hint */}
+          {openingPlacement && (
+            <div
+              className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-surface-raised border border-accent text-sm text-ink shadow-xl"
+              style={{ zIndex: Z.OVERLAY_UI }}
+            >
+              Click a wall to place the {openingPlacement}
+              <span className="text-ink-muted"> — Esc to cancel</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Right Sidebar - Properties Panel */}
       <PropertiesPanel
         selectedItem={getSelectedItem()}
+        walls={currentDesign.floorPlan?.walls}
         onUpdate={(updates) => {
           const selected = getSelectedItem();
           if (!selected) return;
@@ -828,6 +1133,10 @@ const MainLayout: React.FC = () => {
             updateFurniture(selected.item.id, updates);
           } else if (selected.type === 'wallObject') {
             updateWallObject(selected.item.id, updates);
+          } else if (selected.type === 'door') {
+            updateDoor(selected.item.id, updates);
+          } else if (selected.type === 'window') {
+            updateWindow(selected.item.id, updates);
           }
         }}
         onDelete={() => {
@@ -838,6 +1147,10 @@ const MainLayout: React.FC = () => {
             deleteFurniture(selected.item.id);
           } else if (selected.type === 'wallObject') {
             deleteWallObject(selected.item.id);
+          } else if (selected.type === 'door') {
+            deleteDoor(selected.item.id);
+          } else if (selected.type === 'window') {
+            deleteWindow(selected.item.id);
           }
         }}
       />
@@ -893,6 +1206,51 @@ const MainLayout: React.FC = () => {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Convert to Custom Walls Dialog */}
+      {showConvertDialog && (
+        <>
+          <div
+            className="dialog-backdrop-enter fixed inset-0 bg-black/60 backdrop-blur-sm"
+            style={{ zIndex: Z.MODAL }}
+            onClick={() => setShowConvertDialog(false)}
+          />
+          <div
+            className="dialog-panel-enter fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface-raised border border-line-medium rounded-xl shadow-2xl w-full max-w-md p-6"
+            style={{ zIndex: Z.MODAL_PANEL }}
+          >
+            <h3 className="text-lg font-semibold text-ink mb-2">Convert to Custom Walls</h3>
+            <p className="text-sm text-ink-secondary mb-2">
+              Your {currentDesign.roomSections ? 'sections layout (as its bounding rectangle)' : 'room'} becomes
+              four editable walls, and existing doors/windows move onto them. You can then draw
+              walls at any angle.
+            </p>
+            <p className="text-xs text-ink-muted mb-6">
+              Conversion is one-way — converting a copy keeps this design untouched.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => enterCustomWalls(true)}
+                className="btn-glossy btn-glossy-primary px-4 py-2.5 text-sm"
+              >
+                Convert a copy (recommended)
+              </button>
+              <button
+                onClick={() => enterCustomWalls(false)}
+                className="btn-glossy btn-glossy-neutral px-4 py-2.5 text-sm"
+              >
+                Convert this design
+              </button>
+              <button
+                onClick={() => setShowConvertDialog(false)}
+                className="px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-hover rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </>

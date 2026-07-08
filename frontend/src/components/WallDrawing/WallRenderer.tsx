@@ -5,18 +5,24 @@ import {
   calculateWallLength,
   calculateWallSegments,
   getOpeningPosition,
+  findNearestWallForOpening,
+  findOpeningConflict,
   snapToGrid,
   snapToWallEndpoint,
   lerp,
   type WallOpening,
 } from '../../utils/wallGeometry';
+import { Z } from '../../constants/layers';
 import type { WallDrawingMode } from './WallDrawingToolbar';
+
+export const DEFAULT_DOOR_WIDTH = 3;
+export const DEFAULT_WINDOW_WIDTH = 4;
 
 interface WallRendererProps {
   floorPlan: FloorPlan | null;
   doors: Door[];
   windows: Window[];
-  scale: number; // pixels per foot
+  scale: number; // pixels per foot (zoom-adjusted)
   mode: WallDrawingMode;
   wallThickness: number;
   snapToGridEnabled: boolean;
@@ -25,6 +31,15 @@ interface WallRendererProps {
   onUpdateWall: (id: string, updates: Partial<Wall>) => void;
   onDeleteWall: (id: string) => void;
   onAddWall: (wall: Omit<Wall, 'id'>) => void;
+  // Click-to-place doors/windows
+  openingPlacement: 'door' | 'window' | null;
+  onPlaceOpening: (type: 'door' | 'window', wallId: string, position: number) => void;
+  // Opening selection (fine-tuning via properties panel)
+  selectedItemId: string | null;
+  onSelectOpening: (id: string) => void;
+  // Chained drawing coordination with the toolbar
+  onDrawingStateChange?: (isDrawing: boolean) => void;
+  finishRequestId?: number;
 }
 
 const WallRenderer: React.FC<WallRendererProps> = ({
@@ -40,6 +55,12 @@ const WallRenderer: React.FC<WallRendererProps> = ({
   onUpdateWall,
   onDeleteWall,
   onAddWall,
+  openingPlacement,
+  onPlaceOpening,
+  selectedItemId,
+  onSelectOpening,
+  onDrawingStateChange,
+  finishRequestId,
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [drawingWallStart, setDrawingWallStart] = useState<{ x: number; y: number } | null>(null);
@@ -48,13 +69,47 @@ const WallRenderer: React.FC<WallRendererProps> = ({
     wallId: string;
     endpoint: 'start' | 'end';
   } | null>(null);
+  const [ghost, setGhost] = useState<{ wallId: string; position: number } | null>(null);
+  const [conflictId, setConflictId] = useState<string | null>(null);
 
-  if (!floorPlan || !floorPlan.walls.length) return null;
+  const walls = floorPlan?.walls ?? [];
 
-  const walls = floorPlan.walls;
+  // Report drawing state so the toolbar can show its Finish button
+  useEffect(() => {
+    onDrawingStateChange?.(drawingWallStart !== null);
+  }, [drawingWallStart, onDrawingStateChange]);
 
-  // Helper: Get mouse position in floor plan coordinates (feet)
-  const getMousePosition = (e: React.MouseEvent<SVGSVGElement>): { x: number; y: number } => {
+  // Toolbar "Finish Wall" ends the current chain
+  useEffect(() => {
+    setDrawingWallStart(null);
+    setTempWallEnd(null);
+  }, [finishRequestId]);
+
+  // Escape ends the drawing chain
+  useEffect(() => {
+    if (!drawingWallStart) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setDrawingWallStart(null);
+        setTempWallEnd(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [drawingWallStart]);
+
+  // Leave draw mode -> drop any in-progress chain
+  useEffect(() => {
+    if (mode !== 'draw') {
+      setDrawingWallStart(null);
+      setTempWallEnd(null);
+    }
+  }, [mode]);
+
+  if (!floorPlan) return null;
+
+  // Mouse position in floor-plan feet, with snapping
+  const getMousePosition = (e: React.MouseEvent): { x: number; y: number } => {
     const svg = svgRef.current;
     if (!svg) return { x: 0, y: 0 };
 
@@ -62,59 +117,89 @@ const WallRenderer: React.FC<WallRendererProps> = ({
     let x = (e.clientX - rect.left) / scale;
     let y = (e.clientY - rect.top) / scale;
 
-    // Apply snapping if enabled
     if (snapToGridEnabled) {
-      x = snapToGrid(x, 1); // Snap to 1-foot grid
-      y = snapToGrid(y, 1);
+      x = snapToGrid(x, 0.5);
+      y = snapToGrid(y, 0.5);
     }
 
-    // Snap to wall endpoints
-    const snapped = snapToWallEndpoint({ x, y }, walls, 0.5);
-    return snapped;
+    return snapToWallEndpoint({ x, y }, walls, 0.5);
   };
 
-  // Handle click on SVG canvas
-  const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
+  const rawMousePosition = (e: React.MouseEvent): { x: number; y: number } => {
+    const svg = svgRef.current;
+    if (!svg) return { x: 0, y: 0 };
+    const rect = svg.getBoundingClientRect();
+    return { x: (e.clientX - rect.left) / scale, y: (e.clientY - rect.top) / scale };
+  };
+
+  const openingsOnWall = (wallId: string) =>
+    [
+      ...doors
+        .filter((d) => d.wallId === wallId && d.position !== undefined)
+        .map((d) => ({ id: d.id, position: d.position as number, width: d.width })),
+      ...windows
+        .filter((w) => w.wallId === wallId && w.position !== undefined)
+        .map((w) => ({ id: w.id, position: w.position as number, width: w.width })),
+    ];
+
+  const handleSvgClick = (e: React.MouseEvent) => {
+    // Placement mode wins over drawing
+    if (openingPlacement && ghost) {
+      const wall = walls.find((w) => w.id === ghost.wallId);
+      if (!wall) return;
+      const width = openingPlacement === 'door' ? DEFAULT_DOOR_WIDTH : DEFAULT_WINDOW_WIDTH;
+      const conflict = findOpeningConflict(wall, ghost.position, width, openingsOnWall(wall.id));
+      if (conflict) {
+        // Flash the conflicting opening red (user-triggered, one-shot)
+        setConflictId(conflict);
+        window.setTimeout(() => setConflictId(null), 600);
+        return;
+      }
+      onPlaceOpening(openingPlacement, ghost.wallId, ghost.position);
+      setGhost(null);
+      return;
+    }
+
     if (mode === 'draw') {
       const pos = getMousePosition(e);
 
       if (!drawingWallStart) {
-        // Start drawing a wall
         setDrawingWallStart(pos);
         setTempWallEnd(pos);
-      } else {
-        // Finish drawing the wall
-        if (
-          Math.abs(pos.x - drawingWallStart.x) > 0.1 ||
-          Math.abs(pos.y - drawingWallStart.y) > 0.1
-        ) {
-          onAddWall({
-            startX: drawingWallStart.x,
-            startY: drawingWallStart.y,
-            endX: pos.x,
-            endY: pos.y,
-            thickness: wallThickness,
-            type: 'exterior',
-          });
-        }
-        setDrawingWallStart(null);
-        setTempWallEnd(null);
+      } else if (
+        Math.abs(pos.x - drawingWallStart.x) > 0.1 ||
+        Math.abs(pos.y - drawingWallStart.y) > 0.1
+      ) {
+        onAddWall({
+          startX: drawingWallStart.x,
+          startY: drawingWallStart.y,
+          endX: pos.x,
+          endY: pos.y,
+          thickness: wallThickness,
+          type: 'exterior',
+        });
+        // Chain: the end of this wall starts the next one
+        setDrawingWallStart(pos);
+        setTempWallEnd(pos);
       }
     }
   };
 
-  // Handle mouse move for preview
-  const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  const handleSvgMouseMove = (e: React.MouseEvent) => {
+    if (openingPlacement) {
+      const width = openingPlacement === 'door' ? DEFAULT_DOOR_WIDTH : DEFAULT_WINDOW_WIDTH;
+      const hit = findNearestWallForOpening(rawMousePosition(e), walls, width);
+      setGhost(hit ? { wallId: hit.wall.id, position: hit.position } : null);
+      return;
+    }
     if (mode === 'draw' && drawingWallStart) {
-      const pos = getMousePosition(e);
-      setTempWallEnd(pos);
+      setTempWallEnd(getMousePosition(e));
     }
   };
 
-  // Handle wall click
   const handleWallClick = (e: React.MouseEvent, wallId: string) => {
+    if (openingPlacement) return; // svg-level click handles placement
     e.stopPropagation();
-
     if (mode === 'select' || mode === 'edit') {
       onSelectWall(wallId);
     } else if (mode === 'delete') {
@@ -122,7 +207,6 @@ const WallRenderer: React.FC<WallRendererProps> = ({
     }
   };
 
-  // Handle endpoint drag
   const handleEndpointMouseDown = (
     e: React.MouseEvent,
     wallId: string,
@@ -130,11 +214,10 @@ const WallRenderer: React.FC<WallRendererProps> = ({
   ) => {
     e.stopPropagation();
     if (mode !== 'edit') return;
-
     setDraggingEndpoint({ wallId, endpoint });
   };
 
-  // Mouse move handler for dragging
+  // Endpoint dragging
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!draggingEndpoint || !svgRef.current) return;
@@ -143,30 +226,21 @@ const WallRenderer: React.FC<WallRendererProps> = ({
       let x = (e.clientX - rect.left) / scale;
       let y = (e.clientY - rect.top) / scale;
 
-      // Apply snapping
       if (snapToGridEnabled) {
-        x = snapToGrid(x, 1);
-        y = snapToGrid(y, 1);
+        x = snapToGrid(x, 0.5);
+        y = snapToGrid(y, 0.5);
       }
-
-      const snapped = snapToWallEndpoint({ x, y }, walls, 0.5);
+      const otherWalls = walls.filter((w) => w.id !== draggingEndpoint.wallId);
+      const snapped = snapToWallEndpoint({ x, y }, otherWalls, 0.5);
 
       if (draggingEndpoint.endpoint === 'start') {
-        onUpdateWall(draggingEndpoint.wallId, {
-          startX: snapped.x,
-          startY: snapped.y,
-        });
+        onUpdateWall(draggingEndpoint.wallId, { startX: snapped.x, startY: snapped.y });
       } else {
-        onUpdateWall(draggingEndpoint.wallId, {
-          endX: snapped.x,
-          endY: snapped.y,
-        });
+        onUpdateWall(draggingEndpoint.wallId, { endX: snapped.x, endY: snapped.y });
       }
     };
 
-    const handleMouseUp = () => {
-      setDraggingEndpoint(null);
-    };
+    const handleMouseUp = () => setDraggingEndpoint(null);
 
     if (draggingEndpoint) {
       window.addEventListener('mousemove', handleMouseMove);
@@ -176,47 +250,133 @@ const WallRenderer: React.FC<WallRendererProps> = ({
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [draggingEndpoint, scale, snapToGridEnabled, walls]);
+  }, [draggingEndpoint, scale, snapToGridEnabled, walls, onUpdateWall]);
 
-  // Helper: Get openings for a wall
+  // The svg root only swallows pointer events when a whole-canvas
+  // interaction is active (drawing / placing); otherwise individual wall
+  // elements opt in so furniture beneath stays interactive.
+  const svgCatchesPointer = mode === 'draw' || openingPlacement !== null;
+
   const getWallOpenings = (wall: Wall): WallOpening[] => {
     const wallLength = calculateWallLength(wall);
     const openings: WallOpening[] = [];
 
-    // Add doors
     doors
-      .filter((d) => d.wallId === wall.id)
+      .filter((d) => d.wallId === wall.id && d.position !== undefined)
       .forEach((door) => {
-        const position = door.position || 0.5;
-        const halfWidth = door.width / 2 / wallLength;
+        const half = door.width / 2 / wallLength;
         openings.push({
           id: door.id,
           type: 'door',
-          startPos: Math.max(0, position - halfWidth),
-          endPos: Math.min(1, position + halfWidth),
+          startPos: Math.max(0, (door.position as number) - half),
+          endPos: Math.min(1, (door.position as number) + half),
         });
       });
 
-    // Add windows
     windows
-      .filter((w) => w.wallId === wall.id)
-      .forEach((window) => {
-        const position = window.position || 0.5;
-        const halfWidth = window.width / 2 / wallLength;
+      .filter((w) => w.wallId === wall.id && w.position !== undefined)
+      .forEach((win) => {
+        const half = win.width / 2 / wallLength;
         openings.push({
-          id: window.id,
+          id: win.id,
           type: 'window',
-          startPos: Math.max(0, position - halfWidth),
-          endPos: Math.min(1, position + halfWidth),
-          heightFromFloor: window.heightFromFloor,
-          height: window.height,
+          startPos: Math.max(0, (win.position as number) - half),
+          endPos: Math.min(1, (win.position as number) + half),
         });
       });
 
     return openings;
   };
 
-  // Render a wall with openings
+  const renderOpening = (
+    wall: Wall,
+    kind: 'door' | 'window',
+    id: string,
+    position: number,
+    width: number,
+    isGhost = false
+  ) => {
+    const pos = getOpeningPosition(wall, position);
+    const isSelected = selectedItemId === id;
+    const isConflict = conflictId === id;
+    const strokeColor = isConflict ? '#EF4444' : isSelected ? '#6366F1' : kind === 'door' ? '#654321' : '#4682B4';
+
+    if (kind === 'door') {
+      return (
+        <g key={isGhost ? 'ghost' : id} opacity={isGhost ? 0.5 : 1}>
+          <rect
+            x={(pos.centerX - width / 2) * scale}
+            y={(pos.centerY - wall.thickness / 2) * scale}
+            width={width * scale}
+            height={wall.thickness * scale}
+            fill={isConflict ? '#FCA5A5' : '#8B4513'}
+            stroke={strokeColor}
+            strokeWidth={isSelected ? 2.5 : 1}
+            transform={`rotate(${pos.angle}, ${pos.centerX * scale}, ${pos.centerY * scale})`}
+            style={isGhost ? undefined : { pointerEvents: 'auto', cursor: 'pointer' }}
+            onClick={
+              isGhost
+                ? undefined
+                : (e) => {
+                    e.stopPropagation();
+                    onSelectOpening(id);
+                  }
+            }
+          />
+          {/* Door swing arc */}
+          <path
+            d={`
+              M ${(pos.centerX + (width / 2) * Math.cos((pos.angle * Math.PI) / 180)) * scale}
+                ${(pos.centerY + (width / 2) * Math.sin((pos.angle * Math.PI) / 180)) * scale}
+              A ${width * scale} ${width * scale} 0 0 1
+                ${(pos.centerX - (width / 2) * Math.cos((pos.angle * Math.PI) / 180) + width * Math.cos(((pos.angle + 90) * Math.PI) / 180)) * scale}
+                ${(pos.centerY - (width / 2) * Math.sin((pos.angle * Math.PI) / 180) + width * Math.sin(((pos.angle + 90) * Math.PI) / 180)) * scale}
+            `}
+            stroke="#8B4513"
+            strokeWidth="1"
+            fill="none"
+            strokeDasharray="4 3"
+            opacity="0.6"
+          />
+        </g>
+      );
+    }
+
+    return (
+      <g key={isGhost ? 'ghost' : id} opacity={isGhost ? 0.5 : 1}>
+        <rect
+          x={(pos.centerX - width / 2) * scale}
+          y={(pos.centerY - wall.thickness / 2) * scale}
+          width={width * scale}
+          height={wall.thickness * scale}
+          fill={isConflict ? '#FCA5A5' : '#87CEEB'}
+          stroke={strokeColor}
+          strokeWidth={isSelected ? 2.5 : 2}
+          transform={`rotate(${pos.angle}, ${pos.centerX * scale}, ${pos.centerY * scale})`}
+          opacity={isGhost ? 0.6 : 0.75}
+          style={isGhost ? undefined : { pointerEvents: 'auto', cursor: 'pointer' }}
+          onClick={
+            isGhost
+              ? undefined
+              : (e) => {
+                  e.stopPropagation();
+                  onSelectOpening(id);
+                }
+          }
+        />
+        <line
+          x1={pos.centerX * scale}
+          y1={(pos.centerY - wall.thickness / 2) * scale}
+          x2={pos.centerX * scale}
+          y2={(pos.centerY + wall.thickness / 2) * scale}
+          stroke="#4682B4"
+          strokeWidth="1"
+          transform={`rotate(${pos.angle}, ${pos.centerX * scale}, ${pos.centerY * scale})`}
+        />
+      </g>
+    );
+  };
+
   const renderWallWithOpenings = (wall: Wall) => {
     const openings = getWallOpenings(wall);
     const segments = calculateWallSegments(openings);
@@ -225,173 +385,106 @@ const WallRenderer: React.FC<WallRendererProps> = ({
 
     return (
       <g key={wall.id}>
-        {/* Render each solid segment */}
         {segments.map((segment, idx) => {
           const t1 = segment.start;
           const t2 = segment.end;
 
-          const segmentPath = `
-            M ${lerp(corners.topLeft.x, corners.topRight.x, t1) * scale}
-              ${lerp(corners.topLeft.y, corners.topRight.y, t1) * scale}
-            L ${lerp(corners.topLeft.x, corners.topRight.x, t2) * scale}
-              ${lerp(corners.topLeft.y, corners.topRight.y, t2) * scale}
-            L ${lerp(corners.bottomLeft.x, corners.bottomRight.x, t2) * scale}
-              ${lerp(corners.bottomLeft.y, corners.bottomRight.y, t2) * scale}
-            L ${lerp(corners.bottomLeft.x, corners.bottomRight.x, t1) * scale}
-              ${lerp(corners.bottomLeft.y, corners.bottomRight.y, t1) * scale}
-            Z
-          `;
+          const segmentPath = [
+            `M ${lerp(corners.topLeft.x, corners.topRight.x, t1) * scale} ${lerp(corners.topLeft.y, corners.topRight.y, t1) * scale}`,
+            `L ${lerp(corners.topLeft.x, corners.topRight.x, t2) * scale} ${lerp(corners.topLeft.y, corners.topRight.y, t2) * scale}`,
+            `L ${lerp(corners.bottomLeft.x, corners.bottomRight.x, t2) * scale} ${lerp(corners.bottomLeft.y, corners.bottomRight.y, t2) * scale}`,
+            `L ${lerp(corners.bottomLeft.x, corners.bottomRight.x, t1) * scale} ${lerp(corners.bottomLeft.y, corners.bottomRight.y, t1) * scale}`,
+            'Z',
+          ].join(' ');
 
           return (
             <path
               key={`segment-${idx}`}
               d={segmentPath}
               fill="url(#wall-fill)"
-              stroke={isSelected ? '#3B82F6' : '#9CA3AF'}
-              strokeWidth={isSelected ? 2 : 1}
+              stroke={isSelected ? '#6366F1' : '#64748B'}
+              strokeWidth={isSelected ? 2.5 : 1}
+              style={{
+                pointerEvents: svgCatchesPointer ? 'none' : 'auto',
+                cursor: mode === 'delete' ? 'not-allowed' : 'pointer',
+              }}
               onClick={(e) => handleWallClick(e, wall.id)}
-              className="cursor-pointer"
             />
           );
         })}
 
-        {/* Render door openings */}
-        {openings
-          .filter((o) => o.type === 'door')
-          .map((opening) => {
-            const door = doors.find((d) => d.id === opening.id);
-            if (!door || !door.position) return null;
+        {/* Doors on this wall */}
+        {doors
+          .filter((d) => d.wallId === wall.id && d.position !== undefined)
+          .map((d) => renderOpening(wall, 'door', d.id, d.position as number, d.width))}
 
-            const pos = getOpeningPosition(wall, door.position);
-            const angle = pos.angle;
+        {/* Windows on this wall */}
+        {windows
+          .filter((w) => w.wallId === wall.id && w.position !== undefined)
+          .map((w) => renderOpening(wall, 'window', w.id, w.position as number, w.width))}
 
-            return (
-              <g key={opening.id}>
-                {/* Door frame */}
-                <rect
-                  x={(pos.centerX - door.width / 2) * scale}
-                  y={(pos.centerY - wall.thickness / 2) * scale}
-                  width={door.width * scale}
-                  height={wall.thickness * scale}
-                  fill="#8B4513"
-                  stroke="#654321"
-                  strokeWidth="1"
-                  transform={`rotate(${angle}, ${pos.centerX * scale}, ${pos.centerY * scale})`}
-                />
-                {/* Door swing arc */}
-                <path
-                  d={`
-                    M ${pos.centerX * scale} ${pos.centerY * scale}
-                    L ${(pos.centerX + door.width * Math.cos((angle - 90) * Math.PI / 180)) * scale}
-                      ${(pos.centerY + door.width * Math.sin((angle - 90) * Math.PI / 180)) * scale}
-                  `}
-                  stroke="#8B4513"
-                  strokeWidth="1"
-                  fill="none"
-                />
-                <path
-                  d={`
-                    M ${pos.centerX * scale} ${pos.centerY * scale}
-                    A ${door.width * scale} ${door.width * scale} 0 0 1
-                    ${(pos.centerX + door.width * Math.cos((angle - 90) * Math.PI / 180)) * scale}
-                    ${(pos.centerY + door.width * Math.sin((angle - 90) * Math.PI / 180)) * scale}
-                  `}
-                  stroke="#8B4513"
-                  strokeWidth="1"
-                  fill="none"
-                  strokeDasharray="3,3"
-                  opacity="0.5"
-                />
-              </g>
-            );
-          })}
-
-        {/* Render window openings */}
-        {openings
-          .filter((o) => o.type === 'window')
-          .map((opening) => {
-            const window = windows.find((w) => w.id === opening.id);
-            if (!window || !window.position) return null;
-
-            const pos = getOpeningPosition(wall, window.position);
-            const angle = pos.angle;
-
-            return (
-              <g key={opening.id}>
-                {/* Window frame */}
-                <rect
-                  x={(pos.centerX - window.width / 2) * scale}
-                  y={(pos.centerY - wall.thickness / 2) * scale}
-                  width={window.width * scale}
-                  height={wall.thickness * scale}
-                  fill="#87CEEB"
-                  stroke="#4682B4"
-                  strokeWidth="2"
-                  transform={`rotate(${angle}, ${pos.centerX * scale}, ${pos.centerY * scale})`}
-                  opacity="0.6"
-                />
-                {/* Window panes */}
-                <line
-                  x1={pos.centerX * scale}
-                  y1={(pos.centerY - wall.thickness / 2) * scale}
-                  x2={pos.centerX * scale}
-                  y2={(pos.centerY + wall.thickness / 2) * scale}
-                  stroke="#4682B4"
-                  strokeWidth="1"
-                  transform={`rotate(${angle}, ${pos.centerX * scale}, ${pos.centerY * scale})`}
-                />
-              </g>
-            );
-          })}
-
-        {/* Wall endpoints (edit handles) */}
+        {/* Endpoint handles (edit mode) */}
         {mode === 'edit' && isSelected && (
           <>
-            <circle
-              cx={wall.startX * scale}
-              cy={wall.startY * scale}
-              r="6"
-              fill="#3B82F6"
-              stroke="white"
-              strokeWidth="2"
-              className="cursor-move"
-              onMouseDown={(e) => handleEndpointMouseDown(e, wall.id, 'start')}
-            />
-            <circle
-              cx={wall.endX * scale}
-              cy={wall.endY * scale}
-              r="6"
-              fill="#3B82F6"
-              stroke="white"
-              strokeWidth="2"
-              className="cursor-move"
-              onMouseDown={(e) => handleEndpointMouseDown(e, wall.id, 'end')}
-            />
+            {(['start', 'end'] as const).map((end) => (
+              <circle
+                key={end}
+                cx={(end === 'start' ? wall.startX : wall.endX) * scale}
+                cy={(end === 'start' ? wall.startY : wall.endY) * scale}
+                r="7"
+                fill="#6366F1"
+                stroke="white"
+                strokeWidth="2.5"
+                style={{ pointerEvents: 'auto', cursor: 'move' }}
+                onMouseDown={(e) => handleEndpointMouseDown(e, wall.id, end)}
+              />
+            ))}
           </>
         )}
       </g>
     );
   };
 
+  const ghostWall = ghost ? walls.find((w) => w.id === ghost.wallId) : null;
+
   return (
     <svg
       ref={svgRef}
       className="absolute inset-0"
-      style={{ zIndex: 5, pointerEvents: mode === 'draw' || mode === 'select' || mode === 'edit' || mode === 'delete' ? 'auto' : 'none' }}
+      width="100%"
+      height="100%"
+      style={{
+        zIndex: Z.WALLS,
+        pointerEvents: svgCatchesPointer ? 'auto' : 'none',
+        cursor: openingPlacement ? (ghost ? 'copy' : 'crosshair') : mode === 'draw' ? 'crosshair' : undefined,
+      }}
       onClick={handleSvgClick}
       onMouseMove={handleSvgMouseMove}
+      onMouseLeave={() => setGhost(null)}
     >
       <defs>
-        <pattern id="wall-fill" width="4" height="4" patternUnits="userSpaceOnUse">
-          <rect width="4" height="4" fill="#E5E7EB" />
-          <rect width="2" height="2" fill="#D1D5DB" />
+        <pattern id="wall-fill" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="6" height="6" fill="#CBD5E1" />
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#94A3B8" strokeWidth="2" />
         </pattern>
       </defs>
 
-      {/* Render all walls */}
       {walls.map((wall) => renderWallWithOpenings(wall))}
 
-      {/* Preview wall while drawing */}
+      {/* Ghost opening while placing */}
+      {openingPlacement &&
+        ghost &&
+        ghostWall &&
+        renderOpening(
+          ghostWall,
+          openingPlacement,
+          '__ghost__',
+          ghost.position,
+          openingPlacement === 'door' ? DEFAULT_DOOR_WIDTH : DEFAULT_WINDOW_WIDTH,
+          true
+        )}
+
+      {/* Preview line while drawing */}
       {mode === 'draw' && drawingWallStart && tempWallEnd && (
         <>
           <line
@@ -399,26 +492,28 @@ const WallRenderer: React.FC<WallRendererProps> = ({
             y1={drawingWallStart.y * scale}
             x2={tempWallEnd.x * scale}
             y2={tempWallEnd.y * scale}
-            stroke="#3B82F6"
-            strokeWidth={wallThickness * scale}
-            strokeDasharray="5,5"
+            stroke="#6366F1"
+            strokeWidth={Math.max(2, wallThickness * scale)}
+            strokeDasharray="6 5"
             opacity="0.6"
             pointerEvents="none"
           />
-          <circle
-            cx={drawingWallStart.x * scale}
-            cy={drawingWallStart.y * scale}
-            r="4"
-            fill="#3B82F6"
+          <circle cx={drawingWallStart.x * scale} cy={drawingWallStart.y * scale} r="4.5" fill="#6366F1" pointerEvents="none" />
+          <circle cx={tempWallEnd.x * scale} cy={tempWallEnd.y * scale} r="4.5" fill="#6366F1" pointerEvents="none" />
+          {/* Live length readout */}
+          <text
+            x={((drawingWallStart.x + tempWallEnd.x) / 2) * scale + 8}
+            y={((drawingWallStart.y + tempWallEnd.y) / 2) * scale - 8}
+            fontSize="12"
+            fontWeight="600"
+            fill="#4338CA"
             pointerEvents="none"
-          />
-          <circle
-            cx={tempWallEnd.x * scale}
-            cy={tempWallEnd.y * scale}
-            r="4"
-            fill="#3B82F6"
-            pointerEvents="none"
-          />
+          >
+            {Math.sqrt(
+              (tempWallEnd.x - drawingWallStart.x) ** 2 + (tempWallEnd.y - drawingWallStart.y) ** 2
+            ).toFixed(1)}
+            ft
+          </text>
         </>
       )}
     </svg>
