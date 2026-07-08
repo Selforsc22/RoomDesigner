@@ -28,7 +28,7 @@ export function boundsFromSections(
 export function getRoomDimensions(
   design: Pick<Design, 'roomDimensions' | 'roomSections' | 'floorPlan'>
 ): { width: number; height: number } {
-  if (design.floorPlan) {
+  if (design.floorPlan && design.floorPlan.walls.length > 0) {
     const base =
       design.roomDimensions ??
       boundsFromSections(design.roomSections) ??

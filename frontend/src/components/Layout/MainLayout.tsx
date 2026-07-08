@@ -272,6 +272,7 @@ const MainLayout: React.FC = () => {
   const handleUndo = () => {
     if (historyIndex > 0 && currentDesign) {
       const newIndex = historyIndex - 1;
+      isTimeTravelRef.current = true;
       setHistoryIndex(newIndex);
       setCurrentDesign(JSON.parse(JSON.stringify(history[newIndex])));
     }
@@ -280,19 +281,35 @@ const MainLayout: React.FC = () => {
   const handleRedo = () => {
     if (historyIndex < history.length - 1 && currentDesign) {
       const newIndex = historyIndex + 1;
+      isTimeTravelRef.current = true;
       setHistoryIndex(newIndex);
       setCurrentDesign(JSON.parse(JSON.stringify(history[newIndex])));
     }
   };
 
-  // Save to history when design changes (debounced)
+  // Save to history when design changes (debounced). Undo/redo set this flag
+  // so restoring an old state doesn't re-record it and truncate the redo tail.
+  const isTimeTravelRef = useRef(false);
   useEffect(() => {
     if (!currentDesign) return;
+    if (isTimeTravelRef.current) {
+      isTimeTravelRef.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       saveToHistory(currentDesign);
     }, 500);
     return () => clearTimeout(timer);
-  }, [currentDesign?.furniture, currentDesign?.wallObjects, currentDesign?.doors, currentDesign?.windows, currentDesign?.roomDimensions]);
+  }, [
+    currentDesign?.furniture,
+    currentDesign?.wallObjects,
+    currentDesign?.doors,
+    currentDesign?.windows,
+    currentDesign?.roomDimensions,
+    currentDesign?.roomSections,
+    currentDesign?.floorPlan,
+    currentDesign?.northAngle,
+  ]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -302,14 +319,17 @@ const MainLayout: React.FC = () => {
         return;
       }
 
-      // Ctrl/Cmd + Z: Undo
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      // Ctrl/Cmd + Z: Undo (e.key is 'Z' when Shift is held, so normalize)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
         e.preventDefault();
         handleUndo();
       }
 
       // Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y: Redo
-      if ((e.ctrlKey || e.metaKey) && (e.shiftKey && e.key === 'z' || e.key === 'y')) {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        ((e.shiftKey && e.key.toLowerCase() === 'z') || e.key.toLowerCase() === 'y')
+      ) {
         e.preventDefault();
         handleRedo();
       }
