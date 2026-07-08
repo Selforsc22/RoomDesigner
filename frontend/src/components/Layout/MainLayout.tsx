@@ -10,9 +10,11 @@ import WallCanvas from '../Canvas/WallCanvas';
 import { ZoomIn, ZoomOut, Undo, Redo, ChevronDown, HelpCircle, Download, Trash2 } from 'lucide-react';
 import { ROOM_TEMPLATES, instantiateTemplate, calculateBounds } from '../../config/roomTemplates';
 import { getRoomDimensions } from '../../utils/design';
-import KeyboardShortcuts from '../Help/KeyboardShortcuts';
-import ExportDialog from '../Export/ExportDialog';
 import { Z } from '../../constants/layers';
+
+// Dialogs load on first open, not in the main bundle
+const KeyboardShortcuts = React.lazy(() => import('../Help/KeyboardShortcuts'));
+const ExportDialog = React.lazy(() => import('../Export/ExportDialog'));
 import WallDrawingToolbar, { type WallDrawingMode } from '../WallDrawing/WallDrawingToolbar';
 import { DEFAULT_DOOR_WIDTH, DEFAULT_WINDOW_WIDTH } from '../WallDrawing/WallRenderer';
 import Compass from '../Canvas/Compass';
@@ -1175,19 +1177,27 @@ const MainLayout: React.FC = () => {
         }}
       />
 
-      {/* Keyboard Shortcuts Dialog */}
-      <KeyboardShortcuts
-        isOpen={showKeyboardShortcuts}
-        onClose={() => setShowKeyboardShortcuts(false)}
-      />
+      {/* Keyboard Shortcuts Dialog (lazy) */}
+      {showKeyboardShortcuts && (
+        <React.Suspense fallback={null}>
+          <KeyboardShortcuts
+            isOpen={showKeyboardShortcuts}
+            onClose={() => setShowKeyboardShortcuts(false)}
+          />
+        </React.Suspense>
+      )}
 
-      {/* Export Dialog */}
-      <ExportDialog
-        isOpen={showExportDialog}
-        onClose={() => setShowExportDialog(false)}
-        onExport={handleExport}
-        designName={currentDesign?.name || 'room-design'}
-      />
+      {/* Export Dialog (lazy) */}
+      {showExportDialog && (
+        <React.Suspense fallback={null}>
+          <ExportDialog
+            isOpen={showExportDialog}
+            onClose={() => setShowExportDialog(false)}
+            onExport={handleExport}
+            designName={currentDesign?.name || 'room-design'}
+          />
+        </React.Suspense>
+      )}
 
       {/* Delete Confirmation Dialog */}
       {showDeleteDialog && (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import * as LucideIcons from 'lucide-react';
+import { Download, File, FileImage, Image, Info, Loader2, X } from 'lucide-react';
 import { Z } from '../../constants/layers';
 
 interface ExportDialogProps {
@@ -40,11 +40,11 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose, onExport, 
         {/* Header */}
         <div className="px-6 py-4 border-b border-line-subtle flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <LucideIcons.Download className="w-6 h-6 text-accent" />
+            <Download className="w-6 h-6 text-accent" />
             <h2 className="text-xl font-bold text-ink">Export Design</h2>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-surface-hover rounded-lg transition-colors text-ink-secondary">
-            <LucideIcons.X className="w-5 h-5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -55,7 +55,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose, onExport, 
             <label className="block text-sm font-medium text-ink-secondary mb-2">File Name</label>
             <div className="px-4 py-3 bg-surface-overlay border border-line-medium rounded-lg">
               <div className="flex items-center gap-2">
-                <LucideIcons.File className="w-4 h-4 text-ink-muted" />
+                <File className="w-4 h-4 text-ink-muted" />
                 <span className="text-sm font-medium text-ink">
                   {designName || 'room-design'}.{format}
                 </span>
@@ -76,7 +76,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose, onExport, 
                 }`}
               >
                 <div className="flex flex-col items-center gap-2">
-                  <LucideIcons.Image className={`w-6 h-6 ${format === 'png' ? 'text-accent' : 'text-ink-muted'}`} />
+                  <Image className={`w-6 h-6 ${format === 'png' ? 'text-accent' : 'text-ink-muted'}`} />
                   <span className={`text-sm font-semibold ${format === 'png' ? 'text-accent' : 'text-ink-secondary'}`}>
                     PNG
                   </span>
@@ -92,7 +92,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose, onExport, 
                 }`}
               >
                 <div className="flex flex-col items-center gap-2">
-                  <LucideIcons.FileImage className={`w-6 h-6 ${format === 'jpeg' ? 'text-accent' : 'text-ink-muted'}`} />
+                  <FileImage className={`w-6 h-6 ${format === 'jpeg' ? 'text-accent' : 'text-ink-muted'}`} />
                   <span className={`text-sm font-semibold ${format === 'jpeg' ? 'text-accent' : 'text-ink-secondary'}`}>
                     JPEG
                   </span>
@@ -127,7 +127,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose, onExport, 
           {/* Info Box */}
           <div className="p-4 bg-accent/10 border border-accent/30 rounded-lg">
             <div className="flex items-start gap-3">
-              <LucideIcons.Info className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+              <Info className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
               <div className="text-sm text-ink-secondary">
                 <p className="font-medium text-ink mb-1">Export Tips</p>
                 <ul className="list-disc list-inside space-y-0.5 text-xs">
@@ -156,12 +156,12 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose, onExport, 
           >
             {isExporting ? (
               <>
-                <LucideIcons.Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Exporting...</span>
               </>
             ) : (
               <>
-                <LucideIcons.Download className="w-4 h-4" />
+                <Download className="w-4 h-4" />
                 <span>Export</span>
               </>
             )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import * as LucideIcons from 'lucide-react';
+import { Keyboard, Lightbulb, X } from 'lucide-react';
 import { Z } from '../../constants/layers';
 
 interface KeyboardShortcutsProps {
@@ -64,14 +64,14 @@ const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({ isOpen, onClose }
         {/* Header */}
         <div className="px-6 py-4 border-b border-line-subtle flex items-center justify-between bg-gradient-to-r from-accent/10 to-accent/5">
           <div className="flex items-center gap-3">
-            <LucideIcons.Keyboard className="w-6 h-6 text-accent" />
+            <Keyboard className="w-6 h-6 text-accent" />
             <h2 className="text-xl font-bold text-ink">Keyboard Shortcuts</h2>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-surface-hover rounded-lg transition-colors text-ink-secondary"
           >
-            <LucideIcons.X className="w-5 h-5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -112,7 +112,7 @@ const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({ isOpen, onClose }
           {/* Tips */}
           <div className="mt-6 p-4 bg-accent/10 border border-accent/30 rounded-lg">
             <div className="flex items-start gap-3">
-              <LucideIcons.Lightbulb className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+              <Lightbulb className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
               <div>
                 <h4 className="text-sm font-semibold text-ink mb-1">Pro Tips</h4>
                 <ul className="text-xs text-ink-secondary space-y-1">

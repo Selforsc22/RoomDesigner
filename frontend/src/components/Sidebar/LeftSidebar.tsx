@@ -4,7 +4,8 @@ import { FURNITURE_TYPES, WALL_OBJECT_TYPES } from '../../config/furnitureConfig
 import type { LightingPreset } from '../../config/lightingPresets';
 import SectionManager from '../RoomSections/SectionManager';
 import LightingPresets from '../Lighting/LightingPresets';
-import * as LucideIcons from 'lucide-react';
+import { Trash2 } from 'lucide-react';
+import { getIconComponent } from '../icons';
 
 interface LeftSidebarProps {
   viewMode: ViewMode;
@@ -96,8 +97,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
   // Helper function to get icon component
   const getIcon = (iconName?: string) => {
-    if (!iconName) return null;
-    const Icon = (LucideIcons as any)[iconName];
+    const Icon = getIconComponent(iconName);
     return Icon ? <Icon className="w-4 h-4" /> : null;
   };
 
@@ -460,7 +460,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                   }`}
                   title="Delete design"
                 >
-                  <LucideIcons.Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             ))}

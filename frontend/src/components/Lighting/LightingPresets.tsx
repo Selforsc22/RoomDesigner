@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import * as LucideIcons from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Info, Lightbulb, Sparkles } from 'lucide-react';
+import { getIconComponent } from '../icons';
 import { LIGHTING_PRESETS } from '../../config/lightingPresets';
 import type { LightingPreset } from '../../config/lightingPresets';
 
@@ -33,7 +34,7 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
   };
 
   const getCategoryIcon = (iconName: string) => {
-    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+    const Icon = getIconComponent(iconName);
     return Icon ? <Icon className="w-4 h-4" /> : null;
   };
 
@@ -41,7 +42,7 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
     <div className="p-4 border-b border-line-subtle">
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-bold text-ink text-xs uppercase tracking-wider">Lighting Presets</h2>
-        <LucideIcons.Sparkles className="w-4 h-4 text-warning" />
+        <Sparkles className="w-4 h-4 text-warning" />
       </div>
 
       <p className="text-xs text-ink-muted mb-3">
@@ -68,9 +69,9 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
                   <span className="text-xs text-ink-muted">({presets.length})</span>
                 </div>
                 {isExpanded ? (
-                  <LucideIcons.ChevronDown className="w-4 h-4 text-ink-muted" />
+                  <ChevronDown className="w-4 h-4 text-ink-muted" />
                 ) : (
-                  <LucideIcons.ChevronRight className="w-4 h-4 text-ink-muted" />
+                  <ChevronRight className="w-4 h-4 text-ink-muted" />
                 )}
               </button>
 
@@ -97,7 +98,7 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
                                 {preset.name}
                               </h3>
                               {isSelected && (
-                                <LucideIcons.Check className="w-4 h-4 text-accent flex-shrink-0" />
+                                <Check className="w-4 h-4 text-accent flex-shrink-0" />
                               )}
                             </div>
                             <p className="text-xs text-ink-secondary line-clamp-2 mb-1">
@@ -105,7 +106,7 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
                             </p>
                             <div className="flex items-center gap-2 text-xs text-ink-muted">
                               <div className="flex items-center gap-1">
-                                <LucideIcons.Lightbulb className="w-3 h-3" />
+                                <Lightbulb className="w-3 h-3" />
                                 <span>{preset.lights.length} lights</span>
                               </div>
                             </div>
@@ -123,7 +124,7 @@ const LightingPresets: React.FC<LightingPresetsProps> = ({ onApplyPreset }) => {
 
       <div className="mt-3 p-3 bg-warning/10 border border-warning/30 rounded-lg">
         <div className="flex items-start gap-2">
-          <LucideIcons.Info className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+          <Info className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
           <div className="text-xs text-ink-secondary">
             <p className="font-medium text-ink mb-1">Pro Tip</p>
             <p>Presets will replace all existing lights in your design. Save your work first!</p>

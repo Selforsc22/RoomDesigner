@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import * as LucideIcons from 'lucide-react';
+import { Lightbulb, MousePointer2, RotateCw, Settings, Trash2, Upload } from 'lucide-react';
 import { kelvinToRGB } from '../../utils/lighting';
 import { calculateWallLength } from '../../utils/wallGeometry';
 import type { Wall } from '../../types';
@@ -43,7 +43,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     return (
       <div className={`${isCollapsed ? 'w-16' : 'w-60'} bg-surface-raised border-l border-line-subtle text-ink scrollbar-matte transition-all duration-300 flex flex-col`}>
         <div className="p-4 border-b border-line-subtle flex items-center justify-between">
-          {!isCollapsed && <LucideIcons.Settings className="w-5 h-5 text-ink-muted" />}
+          {!isCollapsed && <Settings className="w-5 h-5 text-ink-muted" />}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="icon-btn-glossy ml-auto"
@@ -55,7 +55,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         {!isCollapsed && (
           <div className="flex-1 flex items-center justify-center p-6">
             <div className="text-center text-ink-muted">
-              <LucideIcons.MousePointer2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <MousePointer2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p className="text-sm font-medium">Select an item to edit its properties</p>
             </div>
           </div>
@@ -98,7 +98,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       <div className="p-4 border-b border-line-subtle flex items-center justify-between">
         {!isCollapsed && (
           <div className="flex items-center gap-2">
-            <LucideIcons.Settings className="w-5 h-5 text-accent" />
+            <Settings className="w-5 h-5 text-accent" />
             <h2 className="text-lg font-bold text-ink">Properties</h2>
           </div>
         )}
@@ -251,7 +251,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="btn-glossy btn-glossy-neutral w-full flex items-center justify-center gap-2 py-2.5 px-4 font-medium"
                 title="Rotate item by 90 degrees clockwise"
               >
-                <LucideIcons.RotateCw className="w-4 h-4" />
+                <RotateCw className="w-4 h-4" />
                 Rotate 90° (Current: {item.rotation || 0}°)
               </button>
             </div>
@@ -381,7 +381,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               {/* Light summary card */}
               <div className="p-3 bg-surface-overlay border border-line-medium rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
-                  <LucideIcons.Lightbulb className="w-4 h-4 text-warning" />
+                  <Lightbulb className="w-4 h-4 text-warning" />
                   <span className="text-xs font-semibold text-ink">Light Source</span>
                 </div>
                 <p className="text-xs text-ink-secondary">
@@ -419,7 +419,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     className="hidden"
                   />
                   <div className="btn-glossy btn-glossy-neutral w-full flex items-center justify-center gap-2 py-2.5 px-4 font-medium text-center cursor-pointer">
-                    <LucideIcons.Upload className="w-4 h-4" />
+                    <Upload className="w-4 h-4" />
                     {uploadingImage ? 'Uploading...' : 'Upload Image'}
                   </div>
                 </label>
@@ -432,7 +432,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             onClick={onDelete}
             className="btn-glossy btn-glossy-danger w-full flex items-center justify-center gap-2 py-2.5 px-4 font-semibold"
           >
-            <LucideIcons.Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" />
             Delete
           </button>
         </div>
